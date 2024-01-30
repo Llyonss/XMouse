@@ -6,10 +6,10 @@ import { getNonce } from "../utilities/getNonce";
 export class LegoEditorPanel implements vscode.WebviewViewProvider {
     public static readonly viewType = 'xmouse.component';
     public vscodeContext;
-    public component: XMComponent | undefined;
+    public component: any | undefined;
     public position: vscode.Position | undefined;
     private webviewView: vscode.WebviewView | undefined;
-    constructor(context: vscode.ExtensionContext, components: XMComponents) {
+    constructor(context: vscode.ExtensionContext, components: any) {
         this.vscodeContext = context;
         context.subscriptions.push(
             vscode.window.registerWebviewViewProvider('xmouse.lego.editor', this)

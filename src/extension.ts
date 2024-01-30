@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
 import { commands, ExtensionContext } from "vscode";
-import { LegoEditorPanel } from "./panels/LegoEditorPanel";
-
-export function activate(context: ExtensionContext) {
+import { LegoListPanel } from "./panels/LegoListPanel";
+import { XMFile } from "./modules/XMFile"
+export async function activate(context: ExtensionContext) {
   // Create the show hello world command
   // const showHelloWorldCommand = commands.registerCommand("xmouse.component.open", () => {
   //   HelloWorldPanel.render(context.extensionUri);
   // });
 
   // Add command to the extension context
-  new LegoEditorPanel(context)
 
+  const xmFile = new XMFile()
+  await xmFile.init();
 
-  // const components = await ComponentsLoader.elementui(context);
-
+  const legoListPanel = new LegoListPanel(context, xmFile.files)
 
 }

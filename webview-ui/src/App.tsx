@@ -1,4 +1,5 @@
 import type { Component } from "solid-js";
+import { createSignal, For } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
 import { vscode } from "./utilities/vscode";
 import "./App.css";
@@ -23,6 +24,7 @@ provideVSCodeDesignSystem().register(vsCodeButton());
 // provideVSCodeDesignSystem().register(allComponents);
 
 const App: Component = () => {
+  const [getLegos, setLegos] = createSignal({})
   function handleHowdyClick() {
     vscode.postMessage({
       command: "hello",
@@ -30,13 +32,31 @@ const App: Component = () => {
     });
   }
 
-  vscode.listenMessage('lego.list', (data: any) => {
-    console.log('message', data)
+  vscode.listenMessage('lego.list.update', (data: any) => {
+    setLegos(
+      data.reduce((result: any, item: any) => {
+        if (!result[item.dir]) {
+          result[item.dir] = []
+        }
+        result[item.dir].push(item)
+        return result
+      }, {})
+    )
   })
 
   return (
     <main>
       <h1>Hello world!</h1>
+      <For each={Object.keys(getLegos())}>{(key) => (
+        <div>
+          <h3>{key}</h3>
+          <section>
+            <For each={getLegos()?.[key]}>{(item: any) => (
+              <div>{item.name}</div>
+            )}</For>
+          </section>
+        </div>
+      )}</For>
       <vscode-button onClick={handleHowdyClick}>Howdy!</vscode-button>
     </main>
   );
