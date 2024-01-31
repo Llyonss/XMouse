@@ -19,12 +19,12 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
             const position = event.selections[0].start;
             this.setAttr2Editor(position)
         });
-        // vscode.workspace.onDidChangeTextDocument((event) => {
-        //     console.log(event)
-        //     if (this.component) {
-        //         this.setAttr2Editor()
-        //     }
-        // })
+        vscode.workspace.onDidChangeTextDocument((event) => {
+            console.log(event)
+            if (this.activeLego) {
+                this.setAttr2Editor(this.activeLego.position)
+            }
+        })
     }
 
     public resolveWebviewView(
@@ -40,7 +40,8 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(message => {
             // 处理从Webview传递过来的消息
             if (message.command === 'lego.editor.propChange') {
-                this.setAttr2Code(this.activeLego, message.name || "", message.value || "");
+                console.log('mmmm', message)
+                this.setAttr2Code(this.activeLego, message.data.name || "", message.data.value || "");
             }
         }, undefined, this.vscodeContext.subscriptions);
     }
@@ -48,8 +49,6 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
         const editor = vscode.window.activeTextEditor; if (!editor) { return; }
         const doc = editor.document.getText();
         const jsxElement = findJSXElement(doc, position); if (!jsxElement) { return; }
-        console.log('HHHHHH', jsxElement)
-
         this.activeLego = { name: jsxElement.name, attr: jsxElement.attr, position };
         this.webviewView?.webview.postMessage({ command: 'lego.editor.updateLego', data: this.activeLego });
     }
