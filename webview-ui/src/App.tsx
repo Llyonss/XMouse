@@ -32,32 +32,36 @@ const App: Component = () => {
     });
   }
 
-  vscode.listenMessage('lego.list.update', (data: any) => {
+  vscode.listenMessage('lego.list.updateLegos', (data: any) => {
     setLegos(
-      data.reduce((result: any, item: any) => {
+      data.reduce((result: any, item: any, index: number) => {
         if (!result[item.dir]) {
           result[item.dir] = []
         }
-        result[item.dir].push(item)
+        result[item.dir].push({ ...item, id: index })
         return result
       }, {})
     )
   })
-
+  const dragEnd = (event, id) => {
+    event.dataTransfer.setData('text/plain', ' ');
+    vscode.postMessage({ command: 'lego.list.dragEnd', data: id });
+  }
   return (
     <main>
-      <h1>Hello world!</h1>
       <For each={Object.keys(getLegos())}>{(key) => (
         <div>
           <h3>{key}</h3>
           <section>
             <For each={getLegos()?.[key]}>{(item: any) => (
-              <div>{item.name}</div>
+              <div
+                draggable={true}
+                onDragEnd={(event) => dragEnd(event, item.id)}
+              >{item.name}</div>
             )}</For>
           </section>
         </div>
       )}</For>
-      <vscode-button onClick={handleHowdyClick}>Howdy!</vscode-button>
     </main>
   );
 };

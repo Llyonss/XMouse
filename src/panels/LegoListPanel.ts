@@ -25,14 +25,25 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             enableScripts: true,
         };
         webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
-        webviewView.webview.postMessage({ command: 'lego.list.update', data: this.components })
+        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data: this.components })
         webviewView.webview.onDidReceiveMessage(message => {
-            // 处理从Webview传递过来的消息
-            if (message.command === 'dragStart') {
-                this.onDragStart(this.components[message.component])
-            }
-            if (message.command === 'dragEnd') {
-                this.onDragEnd(this.components[message.component])
+            if (message.command === 'lego.list.dragEnd') {
+                vscode.window.activeTextEditor;
+                const component = this.components[message.data]
+                if (!component) { return; }
+                // 获取当前光标位置
+                const position = vscode.window.activeTextEditor?.selection.active;
+                if (!position) return;
+                // 插入引入代码
+                const componentString = `<${component.name}></${component.name}>`;
+                const importString = `import {${component.name}} from '${component.from}'`;
+                const hasImport = vscode.window.activeTextEditor?.document.getText().includes(importString);
+                vscode.window.activeTextEditor?.edit(editBuilder => {
+                    editBuilder.replace(position, componentString);
+                    if (!hasImport) {
+                        editBuilder.replace(new vscode.Position(0, 0), `${importString}\n`);
+                    }
+                });
             }
         }, undefined, this.vscodeContext.subscriptions);
         this.webviewView = webviewView;
@@ -61,5 +72,4 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             </html>
         `;
     }
-
 }
