@@ -20,30 +20,10 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
             this.setAttr2Editor(position)
         });
         vscode.workspace.onDidChangeTextDocument((event) => {
-            console.log(event)
             if (this.activeLego) {
                 this.setAttr2Editor(this.activeLego.position)
             }
         })
-    }
-
-    public resolveWebviewView(
-        webviewView: vscode.WebviewView,
-        context: vscode.WebviewViewResolveContext,
-        _token: vscode.CancellationToken,
-    ) {
-        this.webviewView = webviewView;
-        webviewView.webview.options = {
-            enableScripts: true,
-        };
-        webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri);
-        webviewView.webview.onDidReceiveMessage(message => {
-            // 处理从Webview传递过来的消息
-            if (message.command === 'lego.editor.propChange') {
-                console.log('mmmm', message)
-                this.setAttr2Code(this.activeLego, message.data.name || "", message.data.value || "");
-            }
-        }, undefined, this.vscodeContext.subscriptions);
     }
     setAttr2Editor(position: any) {
         const editor = vscode.window.activeTextEditor; if (!editor) { return; }
@@ -70,6 +50,24 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
             editBuilder.replace(range, code);
         });
     }
+    public resolveWebviewView(
+        webviewView: vscode.WebviewView,
+        context: vscode.WebviewViewResolveContext,
+        _token: vscode.CancellationToken,
+    ) {
+        this.webviewView = webviewView;
+        webviewView.webview.options = {
+            enableScripts: true,
+        };
+        webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri);
+        webviewView.webview.onDidReceiveMessage(message => {
+            // 处理从Webview传递过来的消息
+            if (message.command === 'lego.editor.propChange') {
+                console.log('mmmm', message)
+                this.setAttr2Code(this.activeLego, message.data.name || "", message.data.value || "");
+            }
+        }, undefined, this.vscodeContext.subscriptions);
+    }
     private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
         // 返回完整的HTML内容
         const stylesUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.css"]);
@@ -88,7 +86,7 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
                 <title>Hello World</title>
             </head>
             <body>
-                <div id="root"></div>
+                <div id="LegoEditor"></div>
                 <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>

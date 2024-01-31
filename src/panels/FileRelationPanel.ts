@@ -3,17 +3,15 @@ import * as path from 'path'
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 
-export class LegoListPanel implements vscode.WebviewViewProvider {
+export class FileRelationPanel implements vscode.WebviewViewProvider {
     public vscodeContext;
-    public components: any;
+    public relations: any;
     public webviewView: vscode.WebviewView | undefined;
-    public onDragStart = (component: any) => { };
-    public onDragEnd = (component: any) => { };
-    constructor(context: vscode.ExtensionContext, components: any) {
+    constructor(context: vscode.ExtensionContext, relations: any) {
         this.vscodeContext = context;
-        this.components = components;
+        this.relations = relations;
         context.subscriptions.push(
-            vscode.window.registerWebviewViewProvider('xmouse.lego.list', this)
+            vscode.window.registerWebviewViewProvider('xmouse.file.relation', this)
         );
     }
     public resolveWebviewView(
@@ -24,29 +22,13 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         webviewView.webview.options = {
             enableScripts: true,
         };
-        webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data: this.components })
-        webviewView.webview.onDidReceiveMessage(message => {
-            if (message.command === 'lego.list.dragEnd') {
-                vscode.window.activeTextEditor;
-                const component = this.components[message.data]
-                if (!component) { return; }
-                // 获取当前光标位置
-                const position = vscode.window.activeTextEditor?.selection.active;
-                if (!position) return;
-                // 插入引入代码
-                const componentString = `<${component.name}></${component.name}>`;
-                const importString = `import {${component.name}} from '${component.from}'`;
-                const hasImport = vscode.window.activeTextEditor?.document.getText().includes(importString);
-                vscode.window.activeTextEditor?.edit(editBuilder => {
-                    editBuilder.replace(position, componentString);
-                    if (!hasImport) {
-                        editBuilder.replace(new vscode.Position(0, 0), `${importString}\n`);
-                    }
-                });
-            }
-        }, undefined, this.vscodeContext.subscriptions);
         this.webviewView = webviewView;
+
+        webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
+        webviewView.webview.postMessage({ command: 'relation', data: this.relations })
+        webviewView.webview.onDidReceiveMessage(message => {
+
+        }, undefined, this.vscodeContext.subscriptions);
     }
     private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
         // 返回完整的HTML内容
@@ -66,10 +48,11 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                 <title>Hello World</title>
             </head>
             <body>
-                <div id="LegoList"></div>
+                <div id="FileRelation"></div>
                 <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>
         `;
     }
+
 }
