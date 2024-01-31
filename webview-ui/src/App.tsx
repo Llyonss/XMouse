@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import { createSignal, For } from 'solid-js'
+import { createSignal, For, Switch, Match } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
 import { vscode } from "./utilities/vscode";
 import "./App.css";
@@ -23,15 +23,49 @@ provideVSCodeDesignSystem().register(vsCodeButton());
 //
 // provideVSCodeDesignSystem().register(allComponents);
 
-const App: Component = () => {
-  const [getLegos, setLegos] = createSignal({})
-  function handleHowdyClick() {
+const LegoEditor: Component = () => {
+  const [getLego, setLego] = createSignal({})
+  vscode.listenMessage('lego.editor.updateLego', (data: any) => {
+    console.log('datadatadata', data)
+    setLego(data)
+  })
+
+  const handleChange = (name, value, event) => {
+    console.log(name, value, event)
     vscode.postMessage({
-      command: "hello",
-      data: "Hey there partner! 🤠",
+      command: 'lego.editor.propChange',
+      data: {
+        name, value
+      }
     });
   }
+  return (
+    <main>
+      {getLego().name}
+      <For each={getLego()?.attr}>{(prop: any) => (
+        <Switch fallback={<p>is between 5 and 10</p>}>
+          <Match when={prop.type === 'number'}>
+            <p>number {prop.name}</p>
+            <input value={prop.value} onChange={(event) => handleChange(prop.name, event.value, event)}></input>
+          </Match>
+          <Match when={prop.type === 'string'}>
+            <p>string {prop.name}</p>
+            <input value={prop.value} onChange={(event) => handleChange(prop.name, event.value, event)}></input>
+          </Match>
+          <Match when={prop.type === 'boolean'}>
+            <p>type {prop.type}</p>
+          </Match>
+          <Match when={prop.type === 'enum '}>
+            <p>enum {prop.type}</p>
+          </Match>
+        </Switch>
+      )}</For>
+    </main>
+  )
+}
 
+const LegoList: Component = () => {
+  const [getLegos, setLegos] = createSignal({})
   vscode.listenMessage('lego.list.updateLegos', (data: any) => {
     setLegos(
       data.reduce((result: any, item: any, index: number) => {
@@ -44,11 +78,12 @@ const App: Component = () => {
     )
   })
   const dragEnd = (event, id) => {
-    event.dataTransfer.setData('text/plain', ' ');
+    event.dataTransfer.setData('text/plain', '');
     vscode.postMessage({ command: 'lego.list.dragEnd', data: id });
   }
   return (
     <main>
+      <div></div>
       <For each={Object.keys(getLegos())}>{(key) => (
         <div>
           <h3>{key}</h3>
@@ -66,4 +101,4 @@ const App: Component = () => {
   );
 };
 
-export default App;
+export default LegoEditor;
