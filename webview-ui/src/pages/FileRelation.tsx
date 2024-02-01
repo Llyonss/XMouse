@@ -1,10 +1,12 @@
 import type { Component } from "solid-js";
 import { createSignal, onMount } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
-import { vscode } from "./utilities/vscode";
+import { vscode } from "../utilities/vscode";
 import "./App.css";
 import cytoscape from 'cytoscape';
+import cise from 'cytoscape-cise';
 
+cytoscape.use(cise);
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 
 
@@ -18,7 +20,14 @@ const FileRelation: Component = () => {
     draw(getRelation())
   })
   function draw(relations) {
-    console.log(relations);
+    const clusters = Object.values(relations?.reduce((res, item) => {
+      if (item.group) {
+        res[item.group] = [...res?.[item.group] || [], item.id + ''];
+      }
+      return res;
+    }, {}))
+    console.log(clusters, relations);
+
     var cy = cytoscape({
       container: document.getElementById('cy'), // container to render in
       headless: false,
@@ -55,18 +64,12 @@ const FileRelation: Component = () => {
         }
       ],
       layout: {
-        name: 'cose',
-
-        /**
-        clusters: Object.values(relations?.reduce((res,item)=>{
-          if(item.group){
-            res[item.group] = [...res?.[item.group]||[],item.id ];
-          }
-          return res;
-        },{})),
-        padding:5,
-        nodeSeparation:5,
-        **/
+        name: 'cise',
+        allowNodesInsideCircle: true,
+        refresh: 1,
+        clusters: clusters,
+        nodeSeparation:1,
+        idealInterClusterEdgeLengthCoefficient:8
       }
     });
     cy.elements().forEach(function (element) {
@@ -78,7 +81,6 @@ const FileRelation: Component = () => {
           group = cy.add({
             group: 'nodes',
             data: { id: groupId, label: element.data('group') },
-            position: { x: Math.random() * 300, y: Math.random() * 300 },
             classes: 'group',
           });
         }
@@ -88,7 +90,7 @@ const FileRelation: Component = () => {
     });
   }
   return (
-    <div id="cy"></div>
+    <div id="cy" style="width:100vw;height:100vh"></div>
   )
 }
 

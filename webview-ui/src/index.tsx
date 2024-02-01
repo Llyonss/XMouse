@@ -1,8 +1,8 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import FileRelation from "./FileRelation";
-import LegoEditor from "./LegoEditor";
-import LegoList from "./LegoList";
+import FileRelation from "./pages/FileRelation";
+import LegoEditor from "./pages/LegoEditor";
+import LegoList from "./pages/LegoList";
 if(document.getElementById("FileRelation"))
 render(() => <FileRelation />, document.getElementById("FileRelation") as HTMLElement);
 

@@ -10,6 +10,7 @@
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "cytoscape": "^3.28.1",
+    "cytoscape-cise": "^1.0.0",
     "solid-js": "^1.3.13"
   },
   "devDependencies": {

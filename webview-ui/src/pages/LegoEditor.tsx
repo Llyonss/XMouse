@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 import { createSignal, For, Switch, Match } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
-import { vscode } from "./utilities/vscode";
+import { vscode } from "../utilities/vscode";
 import "./App.css";
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
