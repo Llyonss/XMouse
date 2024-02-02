@@ -8,27 +8,31 @@ export class XMFile {
     packages: { root: string, uri: vscode.Uri, json: {}, alias: any[] }[] = [];
     files: any[] = [];
     relations: any[] = [];
-    constructor() {}
+    constructor() { }
     async init() {
         this.packages = await this.solvePackageJson();
-        this.files = await this.solveFiles();
+        this.files = await this.solveFiles(this.packages);
         this.relations = this.solveRelation(this.files);
     }
     async solvePackageJson() {
         const uris = await vscode.workspace.findFiles('{package.json,**/package.json}', '{node_modules/**,dist/**}');
         const packages = uris.map(uri => ({
-            root: path.dirname(uri.path),
+            root: path.dirname(uri.fsPath),
             uri: uri,
             json: require(uri.fsPath),
             alias: [],
         }))
         return packages
     }
-    async solveFiles() {
+    async solveFiles(pacakges: any) {
         const uris = await vscode.workspace.findFiles('**/**', '{package.json,**/package.json ,**/node_modules/**, node_modules/**,dist/**,**/dist/**}');
         const xmfiles = await Promise.all(uris.map(async (uri) => {
+            const dir = path.dirname(uri.fsPath);
+            const root = pacakges.find((item: any) => dir.includes(item.root))
             const xmfile = {
+                root,
                 uri,
+                relativePath: dir.replace(root.root, path.basename(root.root)),
                 path: uri.fsPath,
                 dir: path.dirname(uri.fsPath),
                 name: path.basename(uri.fsPath),
@@ -122,7 +126,7 @@ export class XMFile {
         const relations: any[] = [{ id: 'npm' }];
         // todo: 封装成通用模块
         xmfiles.forEach((xmfile, xmfileIndex) => {
-            relations.push({ id: xmfileIndex, file: xmfile.path, label: xmfile.name, group: xmfile.dir.replace("c:\\Users\\欧拯救\\Desktop", "@") })
+            relations.push({ id: xmfileIndex, file: xmfile.path, label: xmfile.name, group: xmfile.relativePath.replace("c:\\Users\\欧拯救\\Desktop", "@") })
             xmfile.imports.forEach(importItem => {
                 let find = false;
                 xmfiles.forEach((item, itemIndex) => {
@@ -153,7 +157,6 @@ export class XMFile {
                 }
             })
         })
-        console.log('relations', relations)
         return relations;
     }
     solveNodeModule() {
