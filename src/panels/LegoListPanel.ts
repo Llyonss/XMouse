@@ -28,20 +28,25 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data: this.components })
         webviewView.webview.onDidReceiveMessage(message => {
             if (message.command === 'lego.list.dragEnd') {
-                vscode.window.activeTextEditor;
-                const component = this.components[message.data]
+                const component = this.components[message.data.id]
                 if (!component) { return; }
                 // 获取当前光标位置
                 const position = vscode.window.activeTextEditor?.selection.active;
                 if (!position) return;
                 // 插入引入代码
-                const componentString = `<${component.name}></${component.name}>`;
-                const importString = `import {${component.name}} from '${component.from}'`;
-                const hasImport = vscode.window.activeTextEditor?.document.getText().includes(importString);
+                const fileName = component.path.split('\\').reverse().find(name => !['index', 'src'].includes(name.split('.')[0])).split('.')[0]
+                const componentName = message.data.item === "default" ? fileName : message.data.item;
+                const componentString = `<${componentName}></${componentName}>`;
+                console.log('测测', vscode.window.activeTextEditor?.document.uri.fsPath, component.path,)
+                const repath = path.normalize(path.relative(vscode.window.activeTextEditor?.document.uri.fsPath || '', component.path,)).replace(/\\/g, "/").replace('../', '')
+                const importDefaultString = `import ${componentName} from '${repath}'`;
+                const importSingleString = `import {${componentName}} from '${repath}'`;
+
+                const hasImport = vscode.window.activeTextEditor?.document.getText().includes(importDefaultString);
                 vscode.window.activeTextEditor?.edit(editBuilder => {
                     editBuilder.replace(position, componentString);
                     if (!hasImport) {
-                        editBuilder.replace(new vscode.Position(0, 0), `${importString}\n`);
+                        editBuilder.replace(new vscode.Position(0, 0), `${importDefaultString}\n`);
                     }
                 });
             }
@@ -61,7 +66,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             <head>
                 <meta charset="UTF-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
                 <link rel="stylesheet" type="text/css" href="${stylesUri}">
                 <title>Hello World</title>
             </head>

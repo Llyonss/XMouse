@@ -20,13 +20,13 @@ const FileRelation: Component = () => {
     draw(getRelation())
   })
   function draw(relations) {
+    if(!relations?.length) return;
     const clusters = Object.values(relations?.reduce((res, item) => {
       if (item.group) {
         res[item.group] = [...res?.[item.group] || [], item.id + ''];
       }
       return res;
     }, {}))
-    console.log(clusters, relations);
 
     var cy = cytoscape({
       container: document.getElementById('cy'), // container to render in
