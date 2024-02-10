@@ -3,6 +3,7 @@ import { render } from "solid-js/web";
 import FileRelation from "./pages/FileRelation";
 import LegoEditor from "./pages/LegoEditor";
 import LegoList from "./pages/LegoList";
+import './index.css'
 if(document.getElementById("FileRelation"))
 render(() => <FileRelation />, document.getElementById("FileRelation") as HTMLElement);
 

@@ -2,7 +2,6 @@ import type { Component } from "solid-js";
 import { createSignal, onMount } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../utilities/vscode";
-import "./App.css";
 import cytoscape from 'cytoscape';
 import cise from 'cytoscape-cise';
 
@@ -87,7 +86,7 @@ const FileRelation: Component = () => {
         }
 
         element.move({ parent: groupId });
-      }
+      } 
     });
   }
   return (

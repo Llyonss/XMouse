@@ -1,0 +1,29 @@
+[data-scope='tree-view'][data-part='tree'],
+[data-scope='tree-view'][data-part='treeitem'],
+[data-scope='tree-view'][data-part='branch-content'] {
+  padding-left: 0;
+  list-style: none;
+}
+
+[data-scope='tree-view'][data-part='treeitem'],
+[data-scope='tree-view'][data-part='branch-text'],
+[data-scope='tree-view'][data-part='branch-control'] {
+  display: flex;
+  padding: 2px 0;
+  padding-left: calc(var(--depth) * 6px);
+}
+
+[data-scope='tree-view'][data-part='branch-control'] [data-scope='tree-view'][data-part='treeitem-expand']{
+  transform: rotateZ(90deg);
+}
+[data-scope='tree-view'][data-part='branch-control'][data-state="open"] [data-scope='tree-view'][data-part='treeitem-expand']{
+  transform: rotateZ(180deg);
+}
+
+[data-scope='tree-view'][data-part='branch-control']:hover {
+  background: rgba(105, 105, 105, 0.475);
+}
+
+[data-scope='tree-view'][data-part='branch-control'][data-selected] {
+  background: rgba(139, 110, 255, 0.475);
+}

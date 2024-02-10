@@ -37,7 +37,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                 const position = vscode.window.activeTextEditor?.selection.active;
                 if (!position) return;
                 // 插入引入代码
-                const fileName = component.path.split('\\').reverse().find(name => !['index', 'src'].includes(name.split('.')[0])).split('.')[0]
+                const fileName = component.path.split('\\').reverse().find((name: any) => !['index', 'src'].includes(name.split('.')[0])).split('.')[0]
                 const componentName = message.data.item === "default" ? fileName : message.data.item;
                 const componentString = `<${componentName}></${componentName}>`;
                 console.log('测测', vscode.window.activeTextEditor?.document.uri.fsPath, component.path,)

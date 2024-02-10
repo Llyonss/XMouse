@@ -1,37 +1,43 @@
-# Hello World (SolidJS)
+# README
+来用鼠标编程吧！
+Let's Code with the Mouse !
 
-This is an implementation of the default [Hello World](https://github.com/microsoft/vscode-webview-ui-toolkit-samples/tree/main/default/hello-world) sample extension that demonstrates how to set up and use a [SolidJS](https://www.solidjs.com/) + [Webview UI Toolkit](https://github.com/microsoft/vscode-webview-ui-toolkit) webview extension.
+## 功能点
+1. 拖拽生成组件
+2. 配置组件
 
-![A screenshot of the sample extension.](./assets/hello-world.png)
+## 使用指南
+1. 安装 XMouse 插件！
+2. 点击 activeBar 启动！
 
-## Documentation
+## 版本情况
+### 0.1.0 done
+- [ ] 展示组件库组件清单 (内置elementui)
+- [ ] 拖拽生成组件JSX
+- [ ] 可视化配置组件属性
 
-For a deeper dive into how this sample works, read the guides below.
+### 0.2.0 doing
+- [ ] 支持自定义组件库
+- [ ] 内置常见组件库
+    - [ ] lodash
+    - [ ] element-plus
+    - [x] elementui
+    - [ ] antDesignPro
+    - [ ] antDesign
+    - [ ] vantui
+    - [ ] naiveUI
+    - [ ] tdesign
+    - [ ] arcoDesign
+    - [ ] tailwindcssui
+    - [ ] echarts
+    - [ ] shadcnUI
+    - [ ] antd
+    - [ ] nutui
+    - [ ] uniapp
 
-- [Extension structure](./docs/extension-structure.md)
-- [Extension commands](./docs/extension-commands.md)
-- [Extension development cycle](./docs/extension-development-cycle.md)
+### 0.3.0 doing
+1. 支持
 
-## Run The Sample
+---
 
-```bash
-# Copy sample extension locally
-npx degit microsoft/vscode-webview-ui-toolkit-samples/frameworks/hello-world-solidjs hello-world
-
-# Navigate into sample directory
-cd hello-world
-
-# Install dependencies for both the extension and webview UI source code
-npm run install:all
-
-# Build webview UI source code
-npm run build:webview
-
-# Open sample in VS Code
-code .
-```
-
-Once the sample is open inside VS Code you can run the extension by doing the following:
-
-1. Press `F5` to open a new Extension Development Host window
-2. Inside the host window, open the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and type `Hello World (SolidJS): Show`
+**Enjoy!**

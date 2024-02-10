@@ -1,6 +1,6 @@
 {
-  "name": "hello-world",
-  "version": "0.0.1",
+  "name": "XMouse",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "start": "vite",
@@ -8,6 +8,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@ark-ui/solid": "^2.0.1",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "cytoscape": "^3.28.1",
     "cytoscape-cise": "^1.0.0",

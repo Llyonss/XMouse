@@ -125,11 +125,11 @@ export class XMFile {
     solveRelation(xmfiles: any) {
         const relations: any[] = [{ id: 'npm' }];
         // todo: 封装成通用模块
-        xmfiles.forEach((xmfile, xmfileIndex) => {
+        xmfiles.forEach((xmfile: any, xmfileIndex: any) => {
             relations.push({ id: xmfileIndex, file: xmfile.path, label: xmfile.name, group: xmfile.relativePath.replace("c:\\Users\\欧拯救\\Desktop", "@") })
-            xmfile.imports.forEach(importItem => {
+            xmfile.imports.forEach((importItem: any) => {
                 let find = false;
-                xmfiles.forEach((item, itemIndex) => {
+                xmfiles.forEach((item: any, itemIndex: any) => {
                     if (
                         importItem.path.toLowerCase() === item.path.toLowerCase()
                         || importItem.path.toLowerCase() === item.path.replace(/\.\w*$/, '').toLowerCase()

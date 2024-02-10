@@ -1,19 +1,35 @@
 import type { Component } from "solid-js";
-import { createSignal, For, Show } from 'solid-js'
-
+import { createSignal, For, Match, Show, Switch } from 'solid-js'
+import { TreeView } from '@ark-ui/solid'
+let UUID = 0;
 const LegoListDirTree: Component = (props) => {
-    const dirTree = (data: any, level = 0) => {
+    const dirTree = (data: any, level = 1) => {
+        const id = UUID++;
         return (
-            <div style={`padding-left:${level * 4}px`} >
-                <div onClick={() => { props.onActive(data?.xmfiles) }}>
-                    {props?.node?.(data,level)}
-                </div>
-                <For each={Object.keys(data?.dirMap || {})}>{(key) =>
-                    dirTree({ ...data?.dirMap[key], name: key }, level + 1)
-                }</For>
-            </div >
+            <TreeView.Branch id={id + ''} depth={level} >
+                <TreeView.BranchControl id={id + ''} depth={level} onClick={() => { props.onActive(data?.xmfiles) }}>
+                    <TreeView.BranchText id={id + ''} depth={level}>
+                        <Show when={Object.keys(data?.dirMap||{}).length}>
+                            <span data-scope="tree-view" data-part="treeitem-expand">⏏</span>
+                        </Show>
+                        {props?.node?.(data, level)}
+                    </TreeView.BranchText>
+                </TreeView.BranchControl>
+
+                <TreeView.BranchContent id={id + ''} depth={level}>
+                    <For each={Object.keys(data?.dirMap || {})}>{(key) =>
+                        dirTree({ ...data?.dirMap[key], name: key }, level + 1)
+                    }</For>
+                </TreeView.BranchContent>
+            </TreeView.Branch >
         )
     };
-    return (<div>{dirTree(props?.data)}</div>)
+    return (<div>
+        <TreeView.Root>
+            <TreeView.Tree>
+                {Object.values(props?.data?.dirMap || {})?.map(item => dirTree(item))}
+            </TreeView.Tree>
+        </TreeView.Root>
+    </div>)
 };
 export default LegoListDirTree;

@@ -2,10 +2,14 @@
   "name": "XMouse",
   "displayName": "XMouse",
   "description": "let's code by mouse",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "publisher": "dustycoder",
   "icon": "assets/x.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Llyonss/XMouse.git"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },

@@ -33,7 +33,7 @@ export function findJSXElement(code: string, position: vscode.Position): any | u
         return null
     }
     return {
-        attr: compPath?.node.openingElement.attributes.map(item => {
+        attr: compPath?.node.openingElement.attributes.map((item: any) => {
             return {
                 name: item.name.name,
                 value: item.value.value,
