@@ -8,6 +8,7 @@ provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 
 
 const LegoList: Component = () => {
+  vscode.postMessage({ command: 'lego.list.init'});
   const [getDir, setDir] = createSignal({})
   const [getLegos, setLegos] = createSignal([])
   vscode.listenMessage('lego.list.updateLegos', (data: any) => {

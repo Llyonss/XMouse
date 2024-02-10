@@ -11,8 +11,9 @@ provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 
 
 const FileRelation: Component = () => {
+  vscode.postMessage({ command: 'relation.init'});
   const [getRelation, setRelation] = createSignal([])
-  vscode.listenMessage('relation', (data: any) => {
+  vscode.listenMessage('relation.draw', (data: any) => {
     setRelation(data)
     draw(getRelation())
   })

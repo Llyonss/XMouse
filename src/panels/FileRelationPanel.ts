@@ -25,9 +25,11 @@ export class FileRelationPanel implements vscode.WebviewViewProvider {
         this.webviewView = webviewView;
 
         webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
-        webviewView.webview.postMessage({ command: 'relation', data: this.relations })
+        webviewView.webview.postMessage({ command: 'relation.draw', data: this.relations })
         webviewView.webview.onDidReceiveMessage(message => {
-
+            if (message.command === 'relation.init') {
+                webviewView.webview.postMessage({ command: 'relation.draw', data: this.relations })
+            }
         }, undefined, this.vscodeContext.subscriptions);
     }
     private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {

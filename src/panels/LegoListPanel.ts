@@ -25,8 +25,11 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             enableScripts: true,
         };
         webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data: this.components })
+
         webviewView.webview.onDidReceiveMessage(message => {
+            if (message.command === 'lego.list.init') {
+                webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data: this.components })
+            }
             if (message.command === 'lego.list.dragEnd') {
                 const component = this.components[message.data.id]
                 if (!component) { return; }
@@ -54,7 +57,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         this.webviewView = webviewView;
     }
     private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
-        // 返回完整的HTML内容
         const stylesUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.css"]);
         // The JS file from the SolidJS build output
         const scriptUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.js"]);
@@ -71,7 +73,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             </head>
             <body>
                 <div id="LegoList"></div>
-                <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+                <script type="module" src="${scriptUri}"></script>
             </body>
             </html>
         `;
