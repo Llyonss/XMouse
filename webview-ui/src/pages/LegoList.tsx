@@ -34,12 +34,12 @@ const LegoList: Component = () => {
     setDir(tree)
   })
 
-  const dragEnd = (event, id, item) => {
-    if (!id) {
+  const dragEnd = (event, data) => {
+    if (!data?.id) {
       return;
     }
     event.dataTransfer.setData('text/plain', '');
-    vscode.postMessage({ command: 'lego.list.dragEnd', data: { id, item } });
+    vscode.postMessage({ command: 'lego.list.dragEnd', data });
   }
   return (
     <div >
@@ -47,22 +47,15 @@ const LegoList: Component = () => {
         data={getDir()}
         onActive={(files: any) => { setLegos(files); console.log('xxxxxx', files) }}
         node={(data) => (
-          <Switch fallback={"xxx"}>
-            <Match when={data.type === 'export'}>
-              <span
-                draggable={true}
-                onDragEnd={(event) => { dragEnd(event, data.id, data?.name) }}
-              >
-                ⚛ {data?.name}
-              </span>
-            </Match>
-            <Match when={data.type === 'dir'}>
-              <span >📂{data?.name}</span>
-            </Match>
-            <Match when={data.type === 'file'}>
-              <span >📄{data?.name}</span>
-            </Match>
-          </Switch>
+          <span
+            draggable={true}
+            onDragEnd={(event) => { dragEnd(event, data) }}
+          >
+            {data.type === 'export' ? '⚛' : ""}
+            {data.type === 'dir' ? '📂' : ""}
+            {data.type === 'file' ? '📄' : ""}
+            {data?.name}
+          </span>
         )} />
     </div>
   );

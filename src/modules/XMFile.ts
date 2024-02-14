@@ -15,7 +15,7 @@ export class XMFile {
         this.relations = this.solveRelation(this.files);
     }
     async solvePackageJson() {
-        const uris = await vscode.workspace.findFiles('{package.json,**/package.json}', '{node_modules/**,dist/**}');
+        const uris = await vscode.workspace.findFiles('{package.json,**/package.json}', '{**/node_modules/**, node_modules/**,dist/**,**/dist/**}');
         const packages = uris.map(uri => ({
             root: path.dirname(uri.fsPath),
             uri: uri,
@@ -25,7 +25,7 @@ export class XMFile {
         return packages
     }
     async solveFiles(pacakges: any) {
-        const uris = await vscode.workspace.findFiles('**/**', '{package.json,**/package.json ,**/node_modules/**, node_modules/**,dist/**,**/dist/**}');
+        const uris = await vscode.workspace.findFiles('{**/**.[jt]s,**/**.[jt]sx}', '{package.json,**/package.json ,**/node_modules/**, node_modules/**,dist/**,**/dist/**}');
         const xmfiles = await Promise.all(uris.map(async (uri) => {
             const dir = path.dirname(uri.fsPath);
             const root = pacakges.find((item: any) => dir.includes(item.root))
@@ -164,4 +164,4 @@ export class XMFile {
     }
     solveElementui() {
     }
-}
+} 
