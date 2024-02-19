@@ -52,7 +52,7 @@ class VSCodeAPIWrapper {
     if (this.vsCodeApi) {
       this.vsCodeApi.postMessage({ command: message.command, data: message.data });
     } else {
-      console.log(data);
+      console.log(message);
     }
   }
 

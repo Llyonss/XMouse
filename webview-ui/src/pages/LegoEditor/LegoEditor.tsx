@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 import { createSignal, For, Switch, Match } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
-import { vscode } from "../utilities/vscode";
+import { vscode } from "../../utilities/vscode";
 
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 
@@ -25,6 +25,8 @@ const LegoEditor: Component = () => {
   return (
     <main style="display:flex;flex-flow:column;align-items: stretch;">
       {getLego().name}
+
+      
       <For each={getLego()?.attr}>{(prop: any) => (
         <Switch fallback={<p>is between 5 and 10</p>}>
           <Match when={prop.type === 'number'}>
