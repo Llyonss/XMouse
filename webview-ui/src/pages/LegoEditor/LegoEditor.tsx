@@ -25,8 +25,6 @@ const LegoEditor: Component = () => {
   return (
     <main style="display:flex;flex-flow:column;align-items: stretch;">
       {getLego().name}
-
-      
       <For each={getLego()?.attr}>{(prop: any) => (
         <Switch fallback={<p>is between 5 and 10</p>}>
           <Match when={prop.type === 'number'}>

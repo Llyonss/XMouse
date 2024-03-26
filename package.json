@@ -19,6 +19,14 @@
       {
         "title": "xmouse.lego.open",
         "command": "xmouse.lego.open"
+      },
+      {
+        "command": "xmouse.lego.list.add",
+        "title": "添加组件",
+        "icon": {
+          "light": "assets/add.light.svg",
+          "dark": "assets/add.dark.svg"
+        }
       }
     ],
     "viewsContainers": {
@@ -27,6 +35,15 @@
           "id": "xmouse",
           "title": "xmouse",
           "icon": "assets/x.png"
+        }
+      ]
+    },
+    "menus":{
+      "view/title" :[
+        {
+          "command": "xmouse.lego.list.add",
+          "when": "view == xmouse.lego.list",
+          "group": "navigation"
         }
       ]
     },

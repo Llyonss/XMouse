@@ -10,5 +10,11 @@ export default {
     },
     Aside(props) {
         return (<aside data-scope="layout" data-part="aside">{props.children}</aside>)
+    },
+    Column(props) {
+        return (<div data-scope="layout" data-part="column" style={props.style}>{props.children}</div>)
+    },
+    Row(props) {
+        return (<div data-scope="layout" data-part="row" style={props.style}>{props.children}</div>)
     }
 }

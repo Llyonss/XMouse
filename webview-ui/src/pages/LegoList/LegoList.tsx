@@ -1,9 +1,14 @@
 import type { Component } from "solid-js";
-import { createSignal, For, Match, Index } from 'solid-js'
+import { createStore } from "solid-js/store";
+import { createSignal, For, Match, Index, Switch, createEffect } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../../utilities/vscode";
 import LegoListDirTree from './LegoListDirTree';
-import { TreeView, Accordion, Switch, SegmentGroup, Layout, Dialog } from '../../components'
+import { TreeView, Accordion, SegmentGroup, Layout, Dialog } from '../../components'
+import AddLegoDialog from "./AddLegoDialog";
+import DeleteDialog from "./DeleteDialog";
+import Test from './lego.svg'
+import ContextMenu from './ContextMenu'
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 /**
  * 1，处理出Lego(通过File和Client和Server)
@@ -38,134 +43,178 @@ const legoGroupTransfer = (legoList: LegoMeta[]): LegoGroup[] => {
 }
 
 const legoTransfer = (xmfiles: any[]) => {
-  xmfiles.reduce(()=>{
+  xmfiles.reduce(() => {
 
   })
 }
 
 const LegoList: Component = () => {
   vscode.postMessage({ command: 'lego.list.init' });
+  const [getState, setState] = createSignal('loading')
   const [getDir, setDir] = createSignal({})
   const [getLegos, setLegos] = createSignal([])
-  const [getLegoGroups, setLegoGroups] = createSignal<any[]>([])
-
-
+  const [getLegoGroups, setLegoGroups] = createStore<any[]>([])
+  let addLegoDialog: any = {};
+  let deleteLegoDialog: any = {};
   vscode.listenMessage('lego.list.updateLegos', (data: any) => {
-    const tree = data.reduce((dirTree: any, item: any, index: number) => {
-      const dirList = item.relativePath.split('\\')
-      const cursor = dirList.reduce((dir: any, item: any) => {
-        if (!dir.dirMap[item]) {
-          dir.dirMap[item] = { dirMap: {}, type: "dir" };
-        }
+    // const tree = data.reduce((dirTree: any, item: any, index: number) => {
+    //   const dirList = item.relativePath.split('\\')
+    //   const cursor = dirList.reduce((dir: any, item: any) => {
+    //     if (!dir.dirMap[item]) {
+    //       dir.dirMap[item] = { dirMap: {}, type: "dir" };
+    //     }
 
-        return dir.dirMap[item]
-      }, dirTree)
-      cursor.name = item.relativePath
-      if (!cursor.dirMap[item.name]) {
-        cursor.dirMap[item.name] = { name: item.name, dirMap: {}, type: "file", id: index };
-      }
-      cursor.dirMap[item.name].dirMap = item?.exports?.reduce((result, item) => {
-        result[item.name] = { name: item.name, type: "export", id: index }
-        return result
-      }, {}) || {}
-      return dirTree;
-    }, { dirMap: {}, name: 'root' })
+    //     return dir.dirMap[item]
+    //   }, dirTree)
+    //   cursor.name = item.relativePath
+    //   if (!cursor.dirMap[item.name]) {
+    //     cursor.dirMap[item.name] = { name: item.name, dirMap: {}, type: "file", id: index };
+    //   }
+    //   cursor.dirMap[item.name].dirMap = item?.exports?.reduce((result, item) => {
+    //     result[item.name] = { name: item.name, type: "export", id: index }
+    //     return result
+    //   }, {}) || {}
+    //   return dirTree;
+    // }, { dirMap: {}, name: 'root' })
     // setDir(tree)
+
+    console.log('data', data)
     setLegoGroups(
       legoGroupTransfer([
-        {
-          group: '组1',
-          name: '表格',
-          icon: 'TT',
-        },
-        {
-          group: '组1',
-          name: '单选',
-          icon: 'X',
-        },
-        {
-          group: '组2',
-          name: '复选',
-          icon: 'C',
-        },
+        // {
+        //   group: '组1',
+        //   name: 'ElTable',
+        //   icon: '表格',
+        //   source: 'element-ui',
+        //   code: '<ElTable></ElTable>'
+        // },
         ...data.map((item: any) => ({
-          group: '未分类',
+          id: item.id,
+          group: item.group,
           name: item.name,
-          icon: item.type,
+          source: item.source,
+          code: item.code,
         }))
       ])
     );
-  })
-
-  const handleDragEnd = (event, data) => {
-    if (!data?.id) {
-      return;
+    if (getLegoGroups.length) {
+      setState('data')
+    } else {
+      setState('empty')
     }
+  })
+  const updateLego = (lego?: any) => {
+    addLegoDialog?.open?.(lego).then((item) => {
+      item.id = lego?.id || Date.now().toString(36) + Math.random().toString(36);
+      vscode.postMessage({ command: 'lego.list.update', data: item });
+      const groupIndex = getLegoGroups.findIndex((group) => group.name === item.group)
+      const isAddGroup = groupIndex === -1;
+      if (isAddGroup) {
+        setLegoGroups([...getLegoGroups, { name: item.group, legos: [item] }])
+      }
+
+      const isUpdateGroup = groupIndex !== -1;
+      if (isUpdateGroup) {
+        const legoIndex = getLegoGroups[groupIndex].legos.findIndex(({ id }: any) => lego.id === id)
+        const isAdd = legoIndex === -1
+        if (isAdd) {
+          setLegoGroups(groupIndex, 'legos', (value: any) => {
+            return [...value, item]
+          })
+        }
+
+        const isUpdate = legoIndex !== -1
+        if (isUpdate) {
+          setLegoGroups(groupIndex, 'legos', legoIndex, item)
+        }
+
+        const isDelete = legoIndex !== -1 && ['', null, undefined].includes(lego.name);
+        if (isDelete) {
+          setLegoGroups(groupIndex, 'legos', (legos: any[]) => {
+            return legos.splice(legoIndex, 1)
+          })
+        }
+      }
+
+      if (getLegoGroups.length) {
+        setState('data')
+      } else {
+        setState('empty')
+      }
+    })
+  }
+  vscode.listenMessage('lego.list.add', (data: any) => {
+    updateLego()
+  })
+  const handleDragStart = (event, data) => {
+    event.dataTransfer.setData('text/plain', JSON.parse(JSON.stringify(data.code)));
+    vscode.postMessage({ command: 'lego.list.drag.start', data: JSON.parse(JSON.stringify(data)) });
+  }
+  const handleDragEnd = (event, data) => {
     event.dataTransfer.setData('text/plain', '');
-    vscode.postMessage({ command: 'lego.list.dragEnd', data });
+    vscode.postMessage({ command: 'lego.list.drag.end', data: JSON.parse(JSON.stringify(data)) });
   }
 
 
   const [checked, setChecked] = createSignal(false)
   return (
-    <div >
-      {/* <LegoListDirTree
-        data={getDir()}
-        onActive={(files: any) => { setLegos(files); console.log('xxxxxx', files) }}
-        node={(data) => (
-          <span
-            draggable={true}
-            onDragEnd={(event) => { dragEnd(event, data) }}
-          >
-            {data.type === 'export' ? '⚛' : ""}
-            {data.type === 'dir' ? '📂' : ""}
-            {data.type === 'file' ? '📄' : ""}
-            {data?.name}
-          </span>
-        )} /> */}
-      <Layout.Root layout="document">
-        <Layout.Head>
-          UI库，函数库，代码片段，设计模式
-          {/* <Switch.Root checked={checked()} onCheckedChange={(e) => setChecked(e.checked)}>
-            <Switch.Control >
-              <Switch.Thumb />
-            </Switch.Control >
-            <Switch.Label>编辑模式</Switch.Label>
-          </Switch.Root> */}
-          <button>编辑模式</button>
-        </Layout.Head>
+    <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
+      <AddLegoDialog ref={addLegoDialog}></AddLegoDialog >
+      <DeleteDialog ref={deleteLegoDialog}></DeleteDialog>
 
-        <Layout.Aside>
-          <SegmentGroup.Root>
-            {/* <SegmentGroup.Indicator /> */}
-            <For each={getLegoGroups()}>{(legoGroup: any) => (
-              <SegmentGroup.Item value={legoGroup.name}>
-                <SegmentGroup.ItemText>{legoGroup.name}</SegmentGroup.ItemText>
-                <SegmentGroup.ItemControl />
-              </SegmentGroup.Item>
-            )}</For>
-          </SegmentGroup.Root>
-        </Layout.Aside>
-
-        <Layout.Main>
-          <Accordion.Root value={[getLegoGroups()?.[0]?.name]} multiple>
-            <For each={getLegoGroups()}>{(legoGroup: any) => (
+      <Switch
+        fallback={<div></div>}
+      >
+        <Match when={getState() === 'empty'}>
+          <div style="padding:12px 24px">
+            <p>感谢你这么好看还订阅咱这插件！</p>
+            <p>1. 点击【下方按钮】或【右上方加号】，都可添加组件。</p>
+            <p>2. 添加组件后，右键组件，可编辑或删除。</p>
+            <p>3. 添加组件后，拖拽组件，可以拖拽到代码中。</p>
+            <button data-type="primary" onClick={() => { updateLego() }}>添加组件</button>
+          </div>
+        </Match>
+        <Match when={getState() === 'data'}>
+          <Accordion.Root value={[getLegoGroups?.[0]?.name]} multiple collapsible>
+            <For each={getLegoGroups}>{(legoGroup: any) => (
               <Accordion.Item value={legoGroup.name}>
                 <Accordion.ItemTrigger>
-                  <Accordion.ItemIndicator>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down "><path d="m6 9 6 6 6-6"></path></svg>
+                  <Accordion.ItemIndicator style="display: flex;align-items: center;justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down "><path d="m6 9 6 6 6-6"></path></svg>
                   </Accordion.ItemIndicator>
                   {legoGroup.name}
                 </Accordion.ItemTrigger>
                 <Accordion.ItemContent >
-                  <div style="display:flex;flex-flow:row wrap;gap:4px">
+                  <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);">
                     <For each={legoGroup.legos}>{(lego: any) => (
                       <div
                         draggable={true}
+                        onDragStart={(event) => { handleDragStart(event, lego) }}
                         onDragEnd={(event) => { handleDragEnd(event, lego) }}
                       >
-                        <div style="width:48px;height:48px;border:solid 1px white">{lego.icon}</div>
-                        <div>{lego.name}</div>
+                        <ContextMenu items={[
+                          { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
+                          {
+                            id: 'delete', label: '删除', onClick: () => {
+                              deleteLegoDialog.open(lego).then(() => {
+                                vscode.postMessage({ command: 'lego.list.update', data: { id: lego.id } });
+                                const groupIndex = getLegoGroups.findIndex((group) => group.name === lego.group)
+                                const legoIndex = getLegoGroups[groupIndex].legos.findIndex(({ id }: any) => lego.id === id)
+                                setLegoGroups(groupIndex, 'legos', (legos: any[]) => {
+                                  return legos.splice(legoIndex, 1)
+                                })
+                              })
+                            }
+                          },
+                        ]}>
+                          <div style="cursor: grab;width:40px;height:40px; padding:4px; border: solid 1px var(--vscode-badge-background);background:var(--vscode-badge-background);border-radius: 8px; ">
+                            <img src={Test} style="pointer-events: none;background:white;border-radius: 8px;"></img>
+                          </div>
+
+                          <div style="width:48px;display:flex;justify-content:center;">
+                            {lego.name}
+                          </div>
+                        </ContextMenu>
                       </div>
                     )}</For>
                   </div>
@@ -173,22 +222,10 @@ const LegoList: Component = () => {
               </Accordion.Item>
             )}</For>
           </Accordion.Root>
-        </Layout.Main>
-      </Layout.Root>
-
-      {/* <button onClick={() => setIsOpen(true)}>Open Dialog</button> */}
-      {/* <Dialog.Root open={isOpen()} onOpenChange={() => setIsOpen(false)}>
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Title>Dialog Title</Dialog.Title>
-              <Dialog.Description>Dialog Description</Dialog.Description>
-              <Dialog.CloseTrigger>Close</Dialog.CloseTrigger>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root> */}
+        </Match>
+      </Switch>
+      {/* </Layout.Main> */}
+      {/* </Layout.Root> */}
     </div>
   );
 };
