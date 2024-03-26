@@ -2,7 +2,7 @@
   "name": "XMouse",
   "displayName": "XMouse",
   "description": "let's code by mouse",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "license": "MIT",
   "publisher": "dustycoder",
   "icon": "assets/x.png",
@@ -19,6 +19,14 @@
       {
         "title": "xmouse.lego.open",
         "command": "xmouse.lego.open"
+      },
+      {
+        "command": "xmouse.lego.list.add",
+        "title": "添加组件",
+        "icon": {
+          "light": "assets/add.light.svg",
+          "dark": "assets/add.dark.svg"
+        }
       }
     ],
     "viewsContainers": {
@@ -30,22 +38,31 @@
         }
       ]
     },
+    "menus":{
+      "view/title" :[
+        {
+          "command": "xmouse.lego.list.add",
+          "when": "view == xmouse.lego.list",
+          "group": "navigation"
+        }
+      ]
+    },
     "views": {
       "xmouse": [
         {
           "type": "webview",
           "id": "xmouse.file.relation",
-          "name": "文件关系"
+          "name": "影响范围"
         },
         {
           "type": "webview",
           "id": "xmouse.lego.list",
-          "name": "组件列表"
+          "name": "代码大全"
         },
         {
           "type": "webview",
           "id": "xmouse.lego.editor",
-          "name": "组件配置器"
+          "name": "配置工具"
         }
       ]
     }
