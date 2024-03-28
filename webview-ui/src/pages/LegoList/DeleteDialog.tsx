@@ -46,7 +46,7 @@ export default (props) => {
                                 <button data-type="secondary" onclick={() => setIsOpen(false)}>取消</button>
                             </Layout.Row>
                         </Dialog.Description>
-                        <Dialog.CloseTrigger><img src={Close}></img></Dialog.CloseTrigger>
+                        <Dialog.CloseTrigger><img src={Close} style="filter: invert(1);"></img></Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>
             </Portal>

@@ -8,6 +8,9 @@ dependencies:
   '@ark-ui/solid':
     specifier: ^2.2.0
     version: 2.2.0(@internationalized/date@3.5.2)(solid-js@1.8.15)
+  '@digichanges/solid-multiselect':
+    specifier: ^0.0.10
+    version: 0.0.10(solid-js@1.8.15)
   '@suid/icons-material':
     specifier: ^0.6.11
     version: 0.6.11(solid-js@1.8.15)
@@ -475,6 +478,15 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
     dev: true
+
+  /@digichanges/solid-multiselect@0.0.10(solid-js@1.8.15):
+    resolution: {integrity: sha512-2lSUkrq4NqFDHaa7mPclYTeMMQ/tR8C3NBjUUEC6znGpwOMDbxH+bgEibA0zYKJF+xVF4pgChXZh+bWkSXRXlQ==}
+    engines: {node: '>=14.0.0', yarn: '>=1.22.5'}
+    peerDependencies:
+      solid-js: ^1.1.3
+    dependencies:
+      solid-js: 1.8.15
+    dev: false
 
   /@esbuild/aix-ppc64@0.19.12:
     resolution: {integrity: sha512-bmoCYyWdEL3wDQIVbcyzRyeKLgk2WtWLTWz1ZIAZF/EGbNOwSA6ew3PftJ1PqMiOOGu0OyFMzG53L0zqIpPeNA==}

@@ -27,6 +27,14 @@
           "light": "assets/add.light.svg",
           "dark": "assets/add.dark.svg"
         }
+      },
+      {
+        "command": "xmouse.lego.list.import",
+        "title": "导入"
+      },
+      {
+        "command": "xmouse.lego.list.export",
+        "title": "导出"
       }
     ],
     "viewsContainers": {
@@ -44,6 +52,14 @@
           "command": "xmouse.lego.list.add",
           "when": "view == xmouse.lego.list",
           "group": "navigation"
+        },
+        {
+          "command": "xmouse.lego.list.export",
+          "when": "view == xmouse.lego.list"
+        },
+        {
+          "command": "xmouse.lego.list.import",
+          "when": "view == xmouse.lego.list"
         }
       ]
     },

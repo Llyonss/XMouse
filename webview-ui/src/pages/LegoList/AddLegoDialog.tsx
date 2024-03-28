@@ -10,7 +10,7 @@ provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea(), vsCodeTex
 export default (props) => {
     const [getIsOpen, setIsOpen] = createSignal(false)
 
-    const [getId, setId] = createSignal('')
+    const [getIsAdd, setIsAdd] = createSignal(true)
     const [getName, setName] = createSignal('')
     const [getGroup, setGroup] = createSignal('')
     const [getSource, setSource] = createSignal({ from: '', import: '' })
@@ -25,7 +25,7 @@ export default (props) => {
                 setGroup(item?.group || '');
                 setSource(item?.source || { from: '', import: '' });
                 setCode(item?.code || '');
-                setId(item?.id || '')
+                setIsAdd(!item)
                 const lock = new Promise(((resolve, reject) => {
                     resolveLock = resolve;
                     rejectLock = reject;
@@ -40,7 +40,7 @@ export default (props) => {
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Title>{getId() ? '编辑组件' : '添加组件'}</Dialog.Title>
+                        <Dialog.Title>{getIsAdd() ? '编辑组件' : '添加组件'}</Dialog.Title>
                         <Dialog.Description>
                             {/* 123123123 */}
                             <Layout.Column style="gap:8px;">
@@ -77,7 +77,6 @@ export default (props) => {
                                 <button data-type="primary" onclick={() => {
                                     setIsOpen(false);
                                     resolveLock?.({
-                                        id: getId(),
                                         name: getName(),
                                         group: getGroup(),
                                         source: getSource(),
