@@ -12,6 +12,7 @@ import ImportDialog from "./ImportDialog";
 import Test from './lego.svg'
 import ContextMenu from './ContextMenu'
 import Toast from './Toast'
+import MultiDeleteDialog from "./MultiDeleteDialog";
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 /**
  * 1，处理出Lego(通过File和Client和Server)
@@ -36,12 +37,13 @@ type LegoGroup = {
 const LegoList: Component = () => {
   const [getState, setState] = createSignal('loading')
   const [legoGroupsStore, setLegoGroups] = createStore<any[]>([])
-  const [getAccordion , setAccordion ] = createSignal<string[]>([])
+  const [getAccordion, setAccordion] = createSignal<string[]>([])
   let addLegoDialog: any = {};
   let deleteLegoDialog: any = {};
   let importDialog: any = {};
   let exportDialog: any = {};
   let toastRef: any = {};
+  let multiDeleteDialog: any = {};
   const addLego = (lego?: any) => {
     addLegoDialog?.open?.().then((item) => {
       vscode.postMessage({ command: 'lego.list.add', data: JSON.parse(JSON.stringify(item)) });
@@ -114,6 +116,11 @@ const LegoList: Component = () => {
       })
     })
   })
+  vscode.listenMessage('lego.list.multi-delete', (data: any) => {
+    multiDeleteDialog.open(legoGroupsStore).then((deleteList: any[]) => {
+      vscode.postMessage({ command: 'lego.list.deleteList', data: JSON.parse(JSON.stringify(deleteList)) });
+    })
+  })
 
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
@@ -122,6 +129,7 @@ const LegoList: Component = () => {
       <DeleteDialog ref={deleteLegoDialog}></DeleteDialog>
       <ImportDialog ref={importDialog}></ImportDialog>
       <ExportDialog ref={exportDialog}></ExportDialog>
+      <MultiDeleteDialog ref={multiDeleteDialog}></MultiDeleteDialog>
       <Switch
         fallback={<div></div>}
       >

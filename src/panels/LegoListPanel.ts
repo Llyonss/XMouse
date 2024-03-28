@@ -31,6 +31,9 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.add', () => {
             this.webviewView?.webview.postMessage({ command: 'lego.list.add' });
         }));
+        context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.multi-delete', () => {
+            this.webviewView?.webview.postMessage({ command: 'lego.list.multi-delete' });
+        }));
         context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.import', () => {
             this.webviewView?.webview.postMessage({ command: 'lego.list.import' });
         }));
@@ -104,7 +107,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             }
             if (message.command === 'lego.list.updateList') {
                 console.log('message.dataList', message.data);
-                message.data?.forEach(item => {
+                message.data?.forEach((item: any) => {
                     const index = this.data.findIndex(({ name, group }) => name === item.name && group === item.group);
                     const isAdd = index === -1;
                     if (isAdd) {
@@ -121,6 +124,19 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                         return;
                     }
                 })
+                const data = [...NpmData, ...this.data] as Lego[];;
+                webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data });
+            }
+            if (message.command === 'lego.list.deleteList') {
+                console.log('list删除', message.data)
+                message.data?.forEach((item: any) => {
+                    const index = this.data.findIndex(({ group, name }) => group === item.group && name === item.name);
+                    if (index === -1) {
+                        return;
+                    }
+                    this.data.splice(index, 1);
+                })
+                this.storage.set('LegoList', this.data);
                 const data = [...NpmData, ...this.data] as Lego[];;
                 webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data });
             }
