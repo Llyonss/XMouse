@@ -2,6 +2,7 @@ import { Combobox } from '@ark-ui/solid'
 import { For } from 'solid-js'
 import { Portal } from 'solid-js/web'
 import type { JSX } from 'solid-js';
+import './index.scss'
 type Component<P = {
   items: string[]
 }> = (props: P) => JSX.Element;

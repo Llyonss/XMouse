@@ -1,17 +1,14 @@
 import type { Component } from "solid-js";
 import { createStore } from "solid-js/store";
-import { createSignal, For, Match, Index, Switch, createEffect } from 'solid-js'
+import { createSignal, For, Match, Switch, } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../../utilities/vscode";
-import LegoListDirTree from './LegoListDirTree';
-import { TreeView, Accordion, SegmentGroup, Layout, Dialog } from '../../components'
+import { DAccordion, DDialog,DToast, DContextMenu } from '../../components'
 import AddLegoDialog from "./AddLegoDialog";
 import DeleteDialog from "./DeleteDialog";
 import ExportDialog from "./ExportDialog";
 import ImportDialog from "./ImportDialog";
 import Test from './lego.svg'
-import ContextMenu from './ContextMenu'
-import Toast from './Toast'
 import MultiDeleteDialog from "./MultiDeleteDialog";
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 /**
@@ -44,6 +41,7 @@ const LegoList: Component = () => {
   let exportDialog: any = {};
   let toastRef: any = {};
   let multiDeleteDialog: any = {};
+  let testDialog: any = {}
   const addLego = (lego?: any) => {
     addLegoDialog?.open?.().then((item) => {
       vscode.postMessage({ command: 'lego.list.add', data: JSON.parse(JSON.stringify(item)) });
@@ -124,7 +122,17 @@ const LegoList: Component = () => {
 
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
-      <Toast ref={toastRef}></Toast>
+      <DToast ref={toastRef}></DToast>
+      <DDialog
+        ref={testDialog}
+        title={(data) => '测试'}
+        content={(data) => (
+          <>xxxxxxxx{data.test}</>
+        )}
+        footer={(close) => (
+          <>xxxccccs</>
+        )}
+      />
       <AddLegoDialog ref={addLegoDialog}></AddLegoDialog >
       <DeleteDialog ref={deleteLegoDialog}></DeleteDialog>
       <ImportDialog ref={importDialog}></ImportDialog>
@@ -143,42 +151,30 @@ const LegoList: Component = () => {
           </div>
         </Match>
         <Match when={getState() === 'data'}>
-          <Accordion.Root value={getAccordion()} onValueChange={setAccordion} multiple collapsible>
-            <For each={legoGroupsStore}>{(legoGroup: any) => (
-              <Accordion.Item value={legoGroup.name}>
-                <Accordion.ItemTrigger>
-                  <Accordion.ItemIndicator style="display: flex;align-items: center;justify-content: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down "><path d="m6 9 6 6 6-6"></path></svg>
-                  </Accordion.ItemIndicator>
-                  {legoGroup.name}
-                </Accordion.ItemTrigger>
-                <Accordion.ItemContent >
-                  <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);">
-                    <For each={legoGroup.legos}>{(lego: any) => (
-                      <div
-                        draggable={true}
-                        onDragStart={(event) => { handleDragStart(event, lego) }}
-                        onDragEnd={(event) => { handleDragEnd(event, lego) }}
-                      >
-                        <ContextMenu items={[
-                          { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
-                          { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
-                        ]}>
-                          <div style="cursor: grab;width:48px;height:48px; padding:4px; border: solid 1px var(--vscode-badge-background);background:var(--vscode-badge-background);border-radius: 8px; ">
-                            <img src={Test} style="pointer-events: none;background:white;border-radius: 8px;"></img>
-                          </div>
+          <DAccordion items={legoGroupsStore}>{(legoGroup: any) => (
+            <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);">
+              <For each={legoGroup.legos}>{(lego: any) => (
+                <div
+                  draggable={true}
+                  onDragStart={(event) => { handleDragStart(event, lego) }}
+                  onDragEnd={(event) => { handleDragEnd(event, lego) }}
+                >
+                  <DContextMenu items={[
+                    { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
+                    { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
+                  ]}>
+                    <div style="cursor: grab;width:48px;height:48px; padding:4px; border: solid 1px var(--vscode-badge-background);background:var(--vscode-badge-background);border-radius: 8px; ">
+                      <img src={Test} style="pointer-events: none;background:white;border-radius: 8px;"></img>
+                    </div>
 
-                          <div style="width:48px;display:flex;justify-content:center;word-break: break-all;">
-                            {lego.name}
-                          </div>
-                        </ContextMenu>
-                      </div>
-                    )}</For>
-                  </div>
-                </Accordion.ItemContent>
-              </Accordion.Item>
-            )}</For>
-          </Accordion.Root>
+                    <div style="width:48px;display:flex;justify-content:center;word-break: break-all;">
+                      {lego.name}
+                    </div>
+                  </DContextMenu>
+                </div>
+              )}</For>
+            </div>
+          )}</DAccordion>
         </Match>
       </Switch>
     </div>

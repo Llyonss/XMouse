@@ -1,6 +1,6 @@
 import { Menu } from '@ark-ui/solid'
 import { For } from 'solid-js'
-
+import './index.scss'
 const Basic = (props) => (
     <Menu.Root>
         <Menu.ContextTrigger>

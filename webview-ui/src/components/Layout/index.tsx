@@ -1,3 +1,4 @@
+import './index.scss'
 export default {
     Root(props) {
         return (<div data-scope="layout" data-part="root">{props.children}</div>)

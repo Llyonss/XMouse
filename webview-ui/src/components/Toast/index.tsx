@@ -1,6 +1,5 @@
 import { Toast, createToaster } from '@ark-ui/solid'
-import { createEffect } from 'solid-js'
-
+import './index.scss'
 const Basic = (props) => {
     const [Toaster, toast] = createToaster({
         placement: 'top-end',

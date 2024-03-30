@@ -75,18 +75,8 @@
       "xmouse": [
         {
           "type": "webview",
-          "id": "xmouse.file.relation",
-          "name": "影响范围"
-        },
-        {
-          "type": "webview",
           "id": "xmouse.lego.list",
           "name": "代码大全"
-        },
-        {
-          "type": "webview",
-          "id": "xmouse.lego.editor",
-          "name": "配置工具"
         }
       ]
     }
