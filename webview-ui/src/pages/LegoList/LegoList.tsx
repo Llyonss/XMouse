@@ -4,12 +4,13 @@ import { createSignal, For, Match, Switch, } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../../utilities/vscode";
 import { DAccordion, DToast, DContextMenu } from '../../components'
-import AddLegoDialog from "./AddLegoDialog";
-import DeleteDialog from "./DeleteDialog";
-import ExportDialog from "./ExportDialog";
-import ImportDialog from "./ImportDialog";
-import Test from './lego.svg'
-import MultiDeleteDialog from "./MultiDeleteDialog";
+import DialogForAddLego from "./DialogForAddLego";
+import DialogForDelete from "./DialogForDelete";
+import DialogForExport from "./DialogForExport";
+import DialogForImport from "./DialogForImport";
+import DialogForMultiDelete from "./DialogForMultiDelete";
+
+import LegoListItem from "./LegoListItem";
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 /**
  * 1，处理出Lego(通过File和Client和Server)
@@ -57,7 +58,7 @@ const LegoList: Component = () => {
   }
 
   const handleDragStart = (event: any, data: any) => {
-    console.log('data.code',data.code)
+    console.log('data.code', data.code)
     event.dataTransfer.setData('text/plain', data.code);
     vscode.postMessage({ command: 'lego.list.drag.start', data: JSON.parse(JSON.stringify(data)) });
   }
@@ -122,11 +123,11 @@ const LegoList: Component = () => {
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
       <DToast ref={toastRef}></DToast>
-      <AddLegoDialog ref={addLegoDialog}></AddLegoDialog >
-      <DeleteDialog ref={deleteLegoDialog}></DeleteDialog>
-      <ImportDialog ref={importDialog}></ImportDialog>
-      <ExportDialog ref={exportDialog}></ExportDialog>
-      <MultiDeleteDialog ref={multiDeleteDialog}></MultiDeleteDialog>
+      <DialogForAddLego ref={addLegoDialog}></DialogForAddLego >
+      <DialogForDelete ref={deleteLegoDialog}></DialogForDelete>
+      <DialogForImport ref={importDialog}></DialogForImport>
+      <DialogForExport ref={exportDialog}></DialogForExport>
+      <DialogForMultiDelete ref={multiDeleteDialog}></DialogForMultiDelete>
       <Switch
         fallback={<div></div>}
       >
@@ -147,19 +148,12 @@ const LegoList: Component = () => {
                   { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
                   { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
                 ]}>
-                  <div
+                  <LegoListItem
+                    name={lego.name}
                     draggable={true}
-                    onDragStart={(event) => { handleDragStart(event, lego) }}
-                    onDragEnd={(event) => { handleDragEnd(event, lego) }}
-                  >
-
-                    <div style="cursor: grab;width:48px;height:48px; padding:4px; border: solid 1px var(--vscode-badge-background);background:var(--vscode-badge-background);border-radius: 8px; ">
-                      <img src={Test} style="pointer-events: none;background:white;border-radius: 8px;"></img>
-                    </div>
-                    <div style="width:48px;display:flex;justify-content:center;word-break: break-all;">
-                      {lego.name}
-                    </div>
-                  </div>
+                    onDragStart={(event: any) => { handleDragStart(event, lego) }}
+                    onDragEnd={(event: any) => { handleDragEnd(event, lego) }}
+                  ></LegoListItem>
                 </DContextMenu>
               )}</For>
             </div>
