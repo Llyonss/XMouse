@@ -20,7 +20,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         this.components = components;
         this.storage = new Storage(context);
         this.data = this.storage.get('LegoList') as Lego[] || [];
-        console.log('测试', this.storage.get('LegoList'));
         context.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
                 'xmouse.lego.list',
@@ -42,21 +41,45 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         }));
 
         context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
+
             //时序问题和代码位置问题，入队列
             const component = this.draging;
-            const useImport = component?.source?.import && component?.source?.from;
-            if (!useImport) { return; }
-
-            const text = event.contentChanges?.[0].text;
-            if (text === component.code) {
-                const importDefaultString = `import ${component.source.import} from '${component.source.from}'`;
-                const hasImport = vscode.window.activeTextEditor?.document.getText().includes(importDefaultString);
-                vscode.window.activeTextEditor?.edit(editBuilder => {
-                    if (!hasImport) {
-                        editBuilder.replace(new vscode.Position(0, 0), `${importDefaultString}\n`);
-                    }
-                });
+            const sources = (() => {
+                if (!component?.source) {
+                    return []
+                }
+                if ((component?.source instanceof Array)) {
+                    return component?.source.map((item: any) => ({
+                        import: item.import,
+                        from: item.from
+                    }));
+                }
+                if (component?.source?.import && component?.source?.from) {
+                    return [component?.source]
+                }
+                return []
+            })()
+            if (!sources.length) {
+                return;
             }
+
+            const text = event.contentChanges?.[0].text || '';
+            const activeTextEditor = vscode.window.activeTextEditor;
+            if (text.replaceAll(/[\s\n\t]*/g, '') === component.code.replaceAll(/[\s\n\t]*/g, '')) {
+                sources.forEach((source: any, index: number) => {
+                    setTimeout(() => {
+                        const importDefaultString = `import ${source.import} from '${source.from}'`;
+                        const hasImport = activeTextEditor?.document.getText().includes(importDefaultString);
+
+                        activeTextEditor?.edit(editBuilder => {
+                            if (!hasImport) {
+                                editBuilder.replace(new vscode.Position(0, 0), `${importDefaultString}\n`);
+                            }
+                        });
+                    }, 50 * index);
+                })
+            }
+
         }));
     }
     public resolveWebviewView(
@@ -152,29 +175,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                 }, 16);
 
             }
-            // if (message.command === 'lego.list.dragEnd') {
-            //     const component = this.components[message.data.id];
-            //     if (!component) { return; }
-            //     // 获取当前光标位置
-            //     const position = vscode.window.activeTextEditor?.selection.active;
-            //     if (!position) return;
-            //     // 插入引入代码
-            //     const fileName = component.path.split('\\').reverse().find((name: any) => !['index', 'src'].includes(name.split('.')[0])).split('.')[0];
-            //     const componentName = message.data.item === "default" ? fileName : message.data.item;
-            //     const componentString = `<${componentName}></${componentName}>`;
-            //     console.log('测测', vscode.window.activeTextEditor?.document.uri.fsPath, component.path,);
-            //     const repath = path.normalize(path.relative(vscode.window.activeTextEditor?.document.uri.fsPath || '', component.path,)).replace(/\\/g, "/").replace('../', '');
-            //     const importDefaultString = `import ${componentName} from '${repath}'`;
-            //     const importSingleString = `import {${componentName}} from '${repath}'`;
-
-            //     const hasImport = vscode.window.activeTextEditor?.document.getText().includes(importDefaultString);
-            //     vscode.window.activeTextEditor?.edit(editBuilder => {
-            //         editBuilder.replace(position, componentString);
-            //         if (!hasImport) {
-            //             editBuilder.replace(new vscode.Position(0, 0), `${importDefaultString}\n`);
-            //         }
-            //     });
-            // }
         }, undefined, this.vscodeContext.subscriptions);
         this.webviewView = webviewView;
     }

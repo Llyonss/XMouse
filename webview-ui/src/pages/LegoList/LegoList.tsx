@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 import { createSignal, For, Match, Switch, } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../../utilities/vscode";
-import { DAccordion, DDialog, DToast, DContextMenu } from '../../components'
+import { DAccordion, DToast, DContextMenu } from '../../components'
 import AddLegoDialog from "./AddLegoDialog";
 import DeleteDialog from "./DeleteDialog";
 import ExportDialog from "./ExportDialog";
@@ -34,21 +34,19 @@ type LegoGroup = {
 const LegoList: Component = () => {
   const [getState, setState] = createSignal('loading')
   const [legoGroupsStore, setLegoGroups] = createStore<any[]>([])
-  const [getAccordion, setAccordion] = createSignal<string[]>([])
   let addLegoDialog: any = {};
   let deleteLegoDialog: any = {};
   let importDialog: any = {};
   let exportDialog: any = {};
   let toastRef: any = {};
   let multiDeleteDialog: any = {};
-  let testDialog: any = {}
   const addLego = (lego?: any) => {
-    addLegoDialog?.open?.().then((item:any) => {
+    addLegoDialog?.open?.().then((item: any) => {
       vscode.postMessage({ command: 'lego.list.add', data: JSON.parse(JSON.stringify(item)) });
     })
   }
   const updateLego = (lego?: any) => {
-    addLegoDialog?.open?.(lego, 'update').then((item:any) => {
+    addLegoDialog?.open?.(lego, 'update').then((item: any) => {
       vscode.postMessage({ command: 'lego.list.update', data: { old: JSON.parse(JSON.stringify(lego)), new: JSON.parse(JSON.stringify(item)) } });
     })
   }
@@ -58,11 +56,12 @@ const LegoList: Component = () => {
     })
   }
 
-  const handleDragStart = (event:any, data:any) => {
-    event.dataTransfer.setData('text/plain', JSON.parse(JSON.stringify(data.code)));
+  const handleDragStart = (event: any, data: any) => {
+    console.log('data.code',data.code)
+    event.dataTransfer.setData('text/plain', data.code);
     vscode.postMessage({ command: 'lego.list.drag.start', data: JSON.parse(JSON.stringify(data)) });
   }
-  const handleDragEnd = (event:any, data:any) => {
+  const handleDragEnd = (event: any, data: any) => {
     event.dataTransfer.setData('text/plain', '');
     vscode.postMessage({ command: 'lego.list.drag.end', data: JSON.parse(JSON.stringify(data)) });
   }
@@ -142,26 +141,26 @@ const LegoList: Component = () => {
         </Match>
         <Match when={getState() === 'data'}>
           <DAccordion items={legoGroupsStore}>{(legoGroup: any) => (
-            <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);">
+            <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);align-items: flex-start;">
               <For each={legoGroup.legos}>{(lego: any) => (
-                <div
-                  draggable={true}
-                  onDragStart={(event) => { handleDragStart(event, lego) }}
-                  onDragEnd={(event) => { handleDragEnd(event, lego) }}
-                >
-                  <DContextMenu items={[
-                    { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
-                    { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
-                  ]}>
+                <DContextMenu items={[
+                  { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
+                  { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
+                ]}>
+                  <div
+                    draggable={true}
+                    onDragStart={(event) => { handleDragStart(event, lego) }}
+                    onDragEnd={(event) => { handleDragEnd(event, lego) }}
+                  >
+
                     <div style="cursor: grab;width:48px;height:48px; padding:4px; border: solid 1px var(--vscode-badge-background);background:var(--vscode-badge-background);border-radius: 8px; ">
                       <img src={Test} style="pointer-events: none;background:white;border-radius: 8px;"></img>
                     </div>
-
                     <div style="width:48px;display:flex;justify-content:center;word-break: break-all;">
                       {lego.name}
                     </div>
-                  </DContextMenu>
-                </div>
+                  </div>
+                </DContextMenu>
               )}</For>
             </div>
           )}</DAccordion>
