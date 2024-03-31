@@ -4,15 +4,15 @@ import { Portal } from 'solid-js/web'
 import Close from './close.svg'
 import { TreeSelect } from 'cui-solid'
 
-export default (props) => {
+export default (props: any) => {
     const [getGroups, setGroups] = createSignal([])
     const [getOptions, setOptions] = createSignal([])
     const [getValue, setValue] = createSignal([])
-    let dialogRef = {};
+    let dialogRef: any = {};
     let selectRef = {};
     if (props.ref) {
         props.ref({
-            open: (groups) => {
+            open: (groups: any) => {
                 setGroups(groups);
                 setValue([])
                 setOptions(
@@ -52,13 +52,15 @@ export default (props) => {
                         mode='Shallow' />
                 </DLayout.Column>
             </>)}
-            footer={(close: (data?: any) => {}) => (<>
+            footer={(close) => (<>
                 <button data-type="primary" onclick={() => {
                     const groups = getGroups();
                     close(getValue().flatMap((id: string) => {
                         const [groupId, legoId] = id.split('_');
                         const isGroup = legoId === undefined;
+                        // @ts-ignore
                         if (isGroup) return groups[groupId - 1].legos;
+                        // @ts-ignore
                         return groups[groupId - 1].legos[legoId]
                     }));
                 }}>删除</button>

@@ -1,41 +1,44 @@
-import { createSignal, } from 'solid-js'
+import { JSX, createSignal, } from 'solid-js'
 import { Dialog } from '@ark-ui/solid'
 import { Portal } from 'solid-js/web'
-import Close from './close.svg'
 import './index.scss'
 let hasOpen = false;
-
-export default (props) => {
+type DDialogOpen = () => Promise<any> | undefined;
+type DDialogClose = (data?: any | undefined) => void;
+type DDialogProps = {
+    ref: (data?: { open: DDialogOpen, close: DDialogClose }) => {},
+    title: (close: DDialogClose) => JSX.Element,
+    content: (close: DDialogClose) => JSX.Element,
+    footer: (close: DDialogClose) => JSX.Element
+}
+export default (props: DDialogProps) => {
     const [getIsOpen, setIsOpen] = createSignal(false)
-    let resolveLock = (data: any) => { };
-    let rejectLock = () => { };
-    if (props.ref) {
-        props.ref({
-            open: (item: any) => {
-                if (hasOpen) {
-                    return;
-                }
-                hasOpen = true
-                setIsOpen(true)
-                const lock = new Promise(((resolve, reject) => {
-                    resolveLock = resolve;
-                    rejectLock = reject;
-                }));
-                return lock
-            }
-        })
+    const context = {
+        resolveLock: (data?: any) => { },
+        rejectLock: () => { }
+    };
+    const open: DDialogOpen = () => {
+        if (hasOpen) { return; } hasOpen = true;
+
+        setIsOpen(true)
+        const lock = new Promise(((resolve, reject) => {
+            context.resolveLock = resolve;
+            context.rejectLock = reject;
+        }));
+        return lock
     }
-    const close = (data?: any) => {
+    const close: DDialogClose = (data?: any) => {
         if (data) {
-            resolveLock(data)
+            context.resolveLock(data)
         } else {
-            rejectLock()
+            context.rejectLock()
         }
         setIsOpen(false);
         hasOpen = false;
     }
+    props.ref({ open, close })
     return (
-        <Dialog.Root open={getIsOpen()} onOpenChange={() => { close() }}>
+        <Dialog.Root open={getIsOpen()} onOpenChange={() => { close() }} closeOnInteractOutside={false}>
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>

@@ -55,7 +55,7 @@ export default (props: any) => {
                     </DTab.Item>
                 </DTab.Root>
             </>)}
-            footer={(close: (data?: any) => {}) => (<>
+            footer={(close) => (<>
                 <button data-type="primary" onclick={() => {
                     try {
                         const json = JSON.parse(getJson())

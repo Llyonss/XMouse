@@ -1,7 +1,7 @@
 import { createSignal } from 'solid-js'
 import { DDialog, DLayout } from '../../components'
 
-export default (props) => {
+export default (props: any) => {
     let dialogRef: any = {};
     const [getIsAdd, setIsAdd] = createSignal(true)
     const [getName, setName] = createSignal('')
@@ -58,7 +58,7 @@ export default (props) => {
                     <span style="width:5rem;">组件内容</span><textarea placeholder="如: <ElButton>你好</ElButton>" value={getCode()} onChange={event => setCode(event.target.value)}></textarea>
                 </DLayout.Column>
             )}
-            footer={(close: (data?: any) => {}) => (
+            footer={(close) => (
                 <>
                     <button data-type="primary" onclick={() => {
                         close({

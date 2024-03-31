@@ -1,11 +1,11 @@
 import { Accordion } from '@ark-ui/solid'
 import { Index, createEffect, createSignal } from 'solid-js'
 import './index.scss'
-export default (props) => {
+export default (props: any) => {
     const [getAccordion, setAccordion] = createSignal([props.items[0].name])
     return (
         <Accordion.Root value={getAccordion()} onValueChange={e => { setAccordion(e.value) }} multiple collapsible>
-            {props.items.map((item) => (
+            {props.items.map((item: any) => (
                 <Accordion.Item value={item.name}>
                     <Accordion.ItemTrigger>
                         <Accordion.ItemIndicator>

@@ -1,4 +1,4 @@
-import { createSignal, Show } from 'solid-js'
+import { createSignal } from 'solid-js'
 import { DDialog, DLayout, DTreeSelect } from '../../components'
 
 export default (props: any) => {
@@ -48,13 +48,15 @@ export default (props: any) => {
                     />
                 </DLayout.Column>
             </>)}
-            footer={(close: (data?: any) => {}) => (<>
+            footer={(close) => (<>
                 <button data-type="primary" onclick={() => {
                     const groups = getGroups();
                     close(getValue().flatMap((id: string) => {
                         const [groupId, legoId] = id.split('_');
                         const isGroup = legoId === undefined;
+                        // @ts-ignore
                         if (isGroup) return groups[groupId - 1].legos;
+                        // @ts-ignore
                         return groups[groupId - 1].legos[legoId]
                     }));
                 }}>导出</button>

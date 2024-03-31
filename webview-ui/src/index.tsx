@@ -4,7 +4,7 @@ import FileRelation from "./pages/FileRelation";
 import LegoEditor from "./pages/LegoEditor/LegoEditor";
 import LegoList from "./pages/LegoList/LegoList";
 import { Environment, useEnvironmentContext } from '@ark-ui/solid'
-import 'cui-solid/src/theme/theme.less'
+// import 'cui-solid/src/theme/theme.less'
 import './index.scss'
 import './lib/font-awesome/css/font-awesome.css'
 

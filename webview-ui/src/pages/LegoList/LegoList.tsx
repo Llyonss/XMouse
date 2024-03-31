@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 import { createSignal, For, Match, Switch, } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../../utilities/vscode";
-import { DAccordion, DDialog,DToast, DContextMenu } from '../../components'
+import { DAccordion, DDialog, DToast, DContextMenu } from '../../components'
 import AddLegoDialog from "./AddLegoDialog";
 import DeleteDialog from "./DeleteDialog";
 import ExportDialog from "./ExportDialog";
@@ -43,12 +43,12 @@ const LegoList: Component = () => {
   let multiDeleteDialog: any = {};
   let testDialog: any = {}
   const addLego = (lego?: any) => {
-    addLegoDialog?.open?.().then((item) => {
+    addLegoDialog?.open?.().then((item:any) => {
       vscode.postMessage({ command: 'lego.list.add', data: JSON.parse(JSON.stringify(item)) });
     })
   }
   const updateLego = (lego?: any) => {
-    addLegoDialog?.open?.(lego, 'update').then((item) => {
+    addLegoDialog?.open?.(lego, 'update').then((item:any) => {
       vscode.postMessage({ command: 'lego.list.update', data: { old: JSON.parse(JSON.stringify(lego)), new: JSON.parse(JSON.stringify(item)) } });
     })
   }
@@ -58,11 +58,11 @@ const LegoList: Component = () => {
     })
   }
 
-  const handleDragStart = (event, data) => {
+  const handleDragStart = (event:any, data:any) => {
     event.dataTransfer.setData('text/plain', JSON.parse(JSON.stringify(data.code)));
     vscode.postMessage({ command: 'lego.list.drag.start', data: JSON.parse(JSON.stringify(data)) });
   }
-  const handleDragEnd = (event, data) => {
+  const handleDragEnd = (event:any, data:any) => {
     event.dataTransfer.setData('text/plain', '');
     vscode.postMessage({ command: 'lego.list.drag.end', data: JSON.parse(JSON.stringify(data)) });
   }
@@ -99,7 +99,7 @@ const LegoList: Component = () => {
     addLego()
   })
   vscode.listenMessage('lego.list.import', (data: any) => {
-    importDialog.open().then(list => {
+    importDialog.open().then((list: any[]) => {
       vscode.postMessage({ command: 'lego.list.updateList', data: list });
     })
   })
@@ -123,16 +123,6 @@ const LegoList: Component = () => {
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
       <DToast ref={toastRef}></DToast>
-      <DDialog
-        ref={testDialog}
-        title={(data) => '测试'}
-        content={(data) => (
-          <>xxxxxxxx{data.test}</>
-        )}
-        footer={(close) => (
-          <>xxxccccs</>
-        )}
-      />
       <AddLegoDialog ref={addLegoDialog}></AddLegoDialog >
       <DeleteDialog ref={deleteLegoDialog}></DeleteDialog>
       <ImportDialog ref={importDialog}></ImportDialog>
