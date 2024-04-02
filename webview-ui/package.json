@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@ark-ui/solid": "^2.2.0",
+    "@digichanges/solid-multiselect": "^0.0.10",
     "@suid/icons-material": "^0.6.11",
     "@suid/material": "^0.15.1",
     "@vscode/webview-ui-toolkit": "^1.2.2",
+    "cui-solid": "^0.1.37",
     "cytoscape": "^3.28.1",
     "cytoscape-cise": "^1.0.0",
     "solid-js": "^1.8.11"
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@types/cytoscape": "^3.19.16",
     "@types/vscode-webview": "^1.57.0",
+    "less": "^4.2.0",
     "sass": "^1.71.0",
     "typescript": "^4.6.3",
     "vite": "^5.1.3",

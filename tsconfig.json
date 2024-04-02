@@ -3,10 +3,18 @@
     "module": "commonjs",
     "target": "es6",
     "outDir": "out",
-    "lib": ["es6", "dom"],
+    "lib": [
+      "es6",
+      "dom",
+      "ES2021"
+    ],
     "sourceMap": true,
     "rootDir": "src",
     "strict": true
   },
-  "exclude": ["node_modules", ".vscode-test", "webview-ui"]
+  "exclude": [
+    "node_modules",
+    ".vscode-test",
+    "webview-ui"
+  ]
 }

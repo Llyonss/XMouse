@@ -2,7 +2,7 @@
   "name": "XMouse",
   "displayName": "XMouse",
   "description": "let's code by mouse",
-  "version": "0.4.1",
+  "version": "0.4.6",
   "license": "MIT",
   "publisher": "dustycoder",
   "icon": "assets/x.png",
@@ -27,6 +27,18 @@
           "light": "assets/add.light.svg",
           "dark": "assets/add.dark.svg"
         }
+      },
+      {
+        "command": "xmouse.lego.list.import",
+        "title": "导入"
+      },
+      {
+        "command": "xmouse.lego.list.export",
+        "title": "导出"
+      },
+      {
+        "command": "xmouse.lego.list.multi-delete",
+        "title": "批量删除"
       }
     ],
     "viewsContainers": {
@@ -38,12 +50,24 @@
         }
       ]
     },
-    "menus":{
-      "view/title" :[
+    "menus": {
+      "view/title": [
         {
           "command": "xmouse.lego.list.add",
           "when": "view == xmouse.lego.list",
           "group": "navigation"
+        },
+        {
+          "command": "xmouse.lego.list.export",
+          "when": "view == xmouse.lego.list"
+        },
+        {
+          "command": "xmouse.lego.list.import",
+          "when": "view == xmouse.lego.list"
+        },
+        {
+          "command": "xmouse.lego.list.multi-delete",
+          "when": "view == xmouse.lego.list"
         }
       ]
     },
@@ -51,18 +75,8 @@
       "xmouse": [
         {
           "type": "webview",
-          "id": "xmouse.file.relation",
-          "name": "影响范围"
-        },
-        {
-          "type": "webview",
           "id": "xmouse.lego.list",
           "name": "代码大全"
-        },
-        {
-          "type": "webview",
-          "id": "xmouse.lego.editor",
-          "name": "配置工具"
         }
       ]
     }
@@ -95,6 +109,7 @@
     "@babel/generator": "^7.23.6",
     "@babel/parser": "^7.23.9",
     "@babel/traverse": "^7.23.9",
-    "@babel/types": "^7.23.9"
+    "@babel/types": "^7.23.9",
+    "ignore": "^5.3.1"
   }
 }

@@ -1,14 +1,16 @@
 import type { Component } from "solid-js";
 import { createStore } from "solid-js/store";
-import { createSignal, For, Match, Index, Switch, createEffect } from 'solid-js'
+import { createSignal, For, Match, Switch, } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../../utilities/vscode";
-import LegoListDirTree from './LegoListDirTree';
-import { TreeView, Accordion, SegmentGroup, Layout, Dialog } from '../../components'
-import AddLegoDialog from "./AddLegoDialog";
-import DeleteDialog from "./DeleteDialog";
-import Test from './lego.svg'
-import ContextMenu from './ContextMenu'
+import { DAccordion, DToast, DContextMenu } from '../../components'
+import DialogForAddLego from "./DialogForAddLego";
+import DialogForDelete from "./DialogForDelete";
+import DialogForExport from "./DialogForExport";
+import DialogForImport from "./DialogForImport";
+import DialogForMultiDelete from "./DialogForMultiDelete";
+
+import LegoListItem from "./LegoListItem";
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 /**
  * 1，处理出Lego(通过File和Client和Server)
@@ -29,139 +31,110 @@ type LegoGroup = {
   name: string,
   legos: LegoMeta[]
 }
-const legoGroupTransfer = (legoList: LegoMeta[]): LegoGroup[] => {
-  return Object.values(legoList.reduce((result: any, current: LegoMeta) => {
-    if (!result[current.group]) {
-      result[current.group] = {
-        name: current.group,
-        legos: []
-      }
-    }
-    result[current.group].legos.push(current)
-    return result;
-  }, {}))
-}
-
-const legoTransfer = (xmfiles: any[]) => {
-  xmfiles.reduce(() => {
-
-  })
-}
 
 const LegoList: Component = () => {
-  vscode.postMessage({ command: 'lego.list.init' });
   const [getState, setState] = createSignal('loading')
-  const [getDir, setDir] = createSignal({})
-  const [getLegos, setLegos] = createSignal([])
-  const [getLegoGroups, setLegoGroups] = createStore<any[]>([])
+  const [legoGroupsStore, setLegoGroups] = createStore<any[]>([])
   let addLegoDialog: any = {};
   let deleteLegoDialog: any = {};
+  let importDialog: any = {};
+  let exportDialog: any = {};
+  let toastRef: any = {};
+  let multiDeleteDialog: any = {};
+  const addLego = (lego?: any) => {
+    addLegoDialog?.open?.().then((item: any) => {
+      vscode.postMessage({ command: 'lego.list.add', data: JSON.parse(JSON.stringify(item)) });
+    })
+  }
+  const updateLego = (lego?: any) => {
+    addLegoDialog?.open?.(lego).then((item: any) => {
+      vscode.postMessage({ command: 'lego.list.update', data: { old: JSON.parse(JSON.stringify(lego)), new: JSON.parse(JSON.stringify(item)) } });
+    })
+  }
+  const deleteLego = (lego: any) => {
+    deleteLegoDialog.open(lego).then(() => {
+      vscode.postMessage({ command: 'lego.list.delete', data: JSON.parse(JSON.stringify(lego)) });
+    })
+  }
+
+  const handleDragStart = (event: any, data: any) => {
+    console.log('data.code', data.code)
+    event.dataTransfer.setData('text/plain', data.code);
+    vscode.postMessage({ command: 'lego.list.drag.start', data: JSON.parse(JSON.stringify(data)) });
+  }
+  const handleDragEnd = (event: any, data: any) => {
+    event.dataTransfer.setData('text/plain', '');
+    vscode.postMessage({ command: 'lego.list.drag.end', data: JSON.parse(JSON.stringify(data)) });
+  }
+
+  vscode.postMessage({ command: 'lego.list.init' });
   vscode.listenMessage('lego.list.updateLegos', (data: any) => {
-    // const tree = data.reduce((dirTree: any, item: any, index: number) => {
-    //   const dirList = item.relativePath.split('\\')
-    //   const cursor = dirList.reduce((dir: any, item: any) => {
-    //     if (!dir.dirMap[item]) {
-    //       dir.dirMap[item] = { dirMap: {}, type: "dir" };
-    //     }
-
-    //     return dir.dirMap[item]
-    //   }, dirTree)
-    //   cursor.name = item.relativePath
-    //   if (!cursor.dirMap[item.name]) {
-    //     cursor.dirMap[item.name] = { name: item.name, dirMap: {}, type: "file", id: index };
-    //   }
-    //   cursor.dirMap[item.name].dirMap = item?.exports?.reduce((result, item) => {
-    //     result[item.name] = { name: item.name, type: "export", id: index }
-    //     return result
-    //   }, {}) || {}
-    //   return dirTree;
-    // }, { dirMap: {}, name: 'root' })
-    // setDir(tree)
-
-    console.log('data', data)
-    setLegoGroups(
-      legoGroupTransfer([
-        // {
-        //   group: '组1',
-        //   name: 'ElTable',
-        //   icon: '表格',
-        //   source: 'element-ui',
-        //   code: '<ElTable></ElTable>'
-        // },
+    setLegoGroups(Object.values(
+      [
         ...data.map((item: any) => ({
-          id: item.id,
           group: item.group,
           name: item.name,
           source: item.source,
           code: item.code,
         }))
-      ])
-    );
-    if (getLegoGroups.length) {
+      ].reduce((result: any, current: LegoMeta) => {
+        if (!result[current.group]) {
+          result[current.group] = {
+            name: current.group,
+            legos: []
+          }
+        }
+        result[current.group].legos.push(current)
+        return result;
+      }, {})
+    ))
+    if (legoGroupsStore.length) {
       setState('data')
     } else {
       setState('empty')
     }
   })
-  const updateLego = (lego?: any) => {
-    addLegoDialog?.open?.(lego).then((item) => {
-      item.id = lego?.id || Date.now().toString(36) + Math.random().toString(36);
-      vscode.postMessage({ command: 'lego.list.update', data: item });
-      const groupIndex = getLegoGroups.findIndex((group) => group.name === item.group)
-      const isAddGroup = groupIndex === -1;
-      if (isAddGroup) {
-        setLegoGroups([...getLegoGroups, { name: item.group, legos: [item] }])
-      }
 
-      const isUpdateGroup = groupIndex !== -1;
-      if (isUpdateGroup) {
-        const legoIndex = getLegoGroups[groupIndex].legos.findIndex(({ id }: any) => lego.id === id)
-        const isAdd = legoIndex === -1
-        if (isAdd) {
-          setLegoGroups(groupIndex, 'legos', (value: any) => {
-            return [...value, item]
-          })
-        }
-
-        const isUpdate = legoIndex !== -1
-        if (isUpdate) {
-          setLegoGroups(groupIndex, 'legos', legoIndex, item)
-        }
-
-        const isDelete = legoIndex !== -1 && ['', null, undefined].includes(lego.name);
-        if (isDelete) {
-          setLegoGroups(groupIndex, 'legos', (legos: any[]) => {
-            return legos.splice(legoIndex, 1)
-          })
-        }
-      }
-
-      if (getLegoGroups.length) {
-        setState('data')
-      } else {
-        setState('empty')
-      }
-    })
-  }
-  vscode.listenMessage('lego.list.add', (data: any) => {
-    updateLego()
+  const [getDirection, setDirection] = createSignal<any[]>([])
+  vscode.postMessage({ command: 'lego.list.direction' });
+  vscode.listenMessage('lego.list.direction', (data: any) => {
+    setDirection(data)
   })
-  const handleDragStart = (event, data) => {
-    event.dataTransfer.setData('text/plain', JSON.parse(JSON.stringify(data.code)));
-    vscode.postMessage({ command: 'lego.list.drag.start', data: JSON.parse(JSON.stringify(data)) });
-  }
-  const handleDragEnd = (event, data) => {
-    event.dataTransfer.setData('text/plain', '');
-    vscode.postMessage({ command: 'lego.list.drag.end', data: JSON.parse(JSON.stringify(data)) });
-  }
+  vscode.listenMessage('lego.list.add', (data: any) => {
+    addLego()
+  })
+  vscode.listenMessage('lego.list.import', (data: any) => {
+    importDialog.open({
+      direction: getDirection()
+    }).then((list: any[]) => {
+      vscode.postMessage({ command: 'lego.list.updateList', data: list });
+    })
+  })
+  vscode.listenMessage('lego.list.export', (data: any) => {
+    exportDialog.open(legoGroupsStore).then((list: any[]) => {
+      navigator.clipboard.writeText(JSON.stringify(list)).then(() => {
+        toastRef.open({
+          title: '导出成功！',
+          description: '导出内容已经复制到剪贴板啦，去粘贴吧!',
+          duration: 20000,
+        })
+      })
+    })
+  })
+  vscode.listenMessage('lego.list.multi-delete', (data: any) => {
+    multiDeleteDialog.open(legoGroupsStore).then((deleteList: any[]) => {
+      vscode.postMessage({ command: 'lego.list.deleteList', data: JSON.parse(JSON.stringify(deleteList)) });
+    })
+  })
 
-
-  const [checked, setChecked] = createSignal(false)
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
-      <AddLegoDialog ref={addLegoDialog}></AddLegoDialog >
-      <DeleteDialog ref={deleteLegoDialog}></DeleteDialog>
-
+      <DToast ref={toastRef}></DToast>
+      <DialogForAddLego ref={addLegoDialog}></DialogForAddLego >
+      <DialogForDelete ref={deleteLegoDialog}></DialogForDelete>
+      <DialogForImport ref={importDialog}></DialogForImport>
+      <DialogForExport ref={exportDialog}></DialogForExport>
+      <DialogForMultiDelete ref={multiDeleteDialog}></DialogForMultiDelete>
       <Switch
         fallback={<div></div>}
       >
@@ -171,61 +144,29 @@ const LegoList: Component = () => {
             <p>1. 点击【下方按钮】或【右上方加号】，都可添加组件。</p>
             <p>2. 添加组件后，右键组件，可编辑或删除。</p>
             <p>3. 添加组件后，拖拽组件，可以拖拽到代码中。</p>
-            <button data-type="primary" onClick={() => { updateLego() }}>添加组件</button>
+            <button data-type="primary" onClick={() => { addLego() }}>添加组件</button>
           </div>
         </Match>
         <Match when={getState() === 'data'}>
-          <Accordion.Root value={[getLegoGroups?.[0]?.name]} multiple collapsible>
-            <For each={getLegoGroups}>{(legoGroup: any) => (
-              <Accordion.Item value={legoGroup.name}>
-                <Accordion.ItemTrigger>
-                  <Accordion.ItemIndicator style="display: flex;align-items: center;justify-content: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down "><path d="m6 9 6 6 6-6"></path></svg>
-                  </Accordion.ItemIndicator>
-                  {legoGroup.name}
-                </Accordion.ItemTrigger>
-                <Accordion.ItemContent >
-                  <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);">
-                    <For each={legoGroup.legos}>{(lego: any) => (
-                      <div
-                        draggable={true}
-                        onDragStart={(event) => { handleDragStart(event, lego) }}
-                        onDragEnd={(event) => { handleDragEnd(event, lego) }}
-                      >
-                        <ContextMenu items={[
-                          { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
-                          {
-                            id: 'delete', label: '删除', onClick: () => {
-                              deleteLegoDialog.open(lego).then(() => {
-                                vscode.postMessage({ command: 'lego.list.update', data: { id: lego.id } });
-                                const groupIndex = getLegoGroups.findIndex((group) => group.name === lego.group)
-                                const legoIndex = getLegoGroups[groupIndex].legos.findIndex(({ id }: any) => lego.id === id)
-                                setLegoGroups(groupIndex, 'legos', (legos: any[]) => {
-                                  return legos.splice(legoIndex, 1)
-                                })
-                              })
-                            }
-                          },
-                        ]}>
-                          <div style="cursor: grab;width:40px;height:40px; padding:4px; border: solid 1px var(--vscode-badge-background);background:var(--vscode-badge-background);border-radius: 8px; ">
-                            <img src={Test} style="pointer-events: none;background:white;border-radius: 8px;"></img>
-                          </div>
-
-                          <div style="width:48px;display:flex;justify-content:center;">
-                            {lego.name}
-                          </div>
-                        </ContextMenu>
-                      </div>
-                    )}</For>
-                  </div>
-                </Accordion.ItemContent>
-              </Accordion.Item>
-            )}</For>
-          </Accordion.Root>
+          <DAccordion items={legoGroupsStore}>{(legoGroup: any) => (
+            <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);align-items: flex-start;">
+              <For each={legoGroup.legos}>{(lego: any) => (
+                <DContextMenu items={[
+                  { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
+                  { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
+                ]}>
+                  <LegoListItem
+                    name={lego.name}
+                    draggable={true}
+                    onDragStart={(event: any) => { handleDragStart(event, lego) }}
+                    onDragEnd={(event: any) => { handleDragEnd(event, lego) }}
+                  ></LegoListItem>
+                </DContextMenu>
+              )}</For>
+            </div>
+          )}</DAccordion>
         </Match>
       </Switch>
-      {/* </Layout.Main> */}
-      {/* </Layout.Root> */}
     </div>
   );
 };
