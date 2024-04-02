@@ -1,6 +1,6 @@
-import { Tabs,  } from '@ark-ui/solid'
+import { Tabs, } from '@ark-ui/solid'
 
-import { createSignal, Index, } from 'solid-js'
+import { createSignal, Index, splitProps, } from 'solid-js'
 
 import './tab.scss'
 
@@ -14,10 +14,10 @@ const List = (props) => {
         </Tabs.List>
     )
 }
-const Root = (props) => {
-    const [value, setValue] = createSignal<string | null>('导入项目文件')
+const Root = (props: any) => {
+    const [, other] = splitProps(props, [])
     return (
-        <Tabs.Root value={value()} onValueChange={(e) => setValue(e.value)}>
+        <Tabs.Root {...other}>
             {props.children}
         </Tabs.Root >
     )

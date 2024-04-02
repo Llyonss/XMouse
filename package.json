@@ -2,7 +2,7 @@
   "name": "XMouse",
   "displayName": "XMouse",
   "description": "let's code by mouse",
-  "version": "0.4.3",
+  "version": "0.4.6",
   "license": "MIT",
   "publisher": "dustycoder",
   "icon": "assets/x.png",
@@ -109,6 +109,7 @@
     "@babel/generator": "^7.23.6",
     "@babel/parser": "^7.23.9",
     "@babel/traverse": "^7.23.9",
-    "@babel/types": "^7.23.9"
+    "@babel/types": "^7.23.9",
+    "ignore": "^5.3.1"
   }
 }

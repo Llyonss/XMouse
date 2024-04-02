@@ -3,16 +3,31 @@ import * as vscode from 'vscode';
 import * as path from 'path'
 import * as types from '@babel/types';
 import * as parser from '@babel/parser';
+import * as fs from 'fs';
 import traverse from '@babel/traverse';
+import Ignore from 'ignore'
+
+interface FileItem {
+    id: string;
+    title: string;
+    fileType: string;
+    fileExt?: string;
+    children?: FileItem[];
+}
+
+
 export class XMFile {
     packages: { root: string, uri: vscode.Uri, json: {}, alias: any[] }[] = [];
     files: any[] = [];
     relations: any[] = [];
+    direction: any[] = [];
+    gitignoreContents: Map<string, string[]> = new Map();
     constructor() { }
     async init() {
-        this.packages = await this.solvePackageJson();
-        this.files = await this.solveFiles(this.packages);
-        this.relations = this.solveRelation(this.files);
+        // this.packages = await this.solvePackageJson();
+        // this.files = await this.solveFiles(this.packages);
+        // this.direction = await this.solveDirection();
+        // this.relations = this.solveRelation(this.files);
     }
     async solvePackageJson() {
         const uris = await vscode.workspace.findFiles('{package.json,**/package.json}', '{**/node_modules/**, node_modules/**,dist/**,**/dist/**}');
@@ -23,6 +38,96 @@ export class XMFile {
             alias: [],
         }))
         return packages
+    }
+    async solveDirection() {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+
+        if (workspaceFolders) {
+            const result: FileItem[] = [];
+            for (let workspaceFolder of workspaceFolders) {
+                await this.walk(workspaceFolder.uri.fsPath, result);
+            }
+            workspaceFolders.forEach(async workspaceFolder => {
+                // 读取工作区文件夹下的文件和子目录
+            });
+            return result;
+        }
+        return []
+    }
+    async walk(directory: string, parent: FileItem[]) {
+        const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(directory));
+
+        for (const [name, type] of entries) {
+            const filePath = path.join(directory, name);
+
+            // 检查文件路径是否应该忽略
+            if (this.isPathIgnored(filePath, directory,)) {
+                continue; // 如果文件被忽略，则跳过
+            }
+
+            const item: FileItem = {
+                id: filePath,
+                title: name,
+                fileType: type === vscode.FileType.Directory ? 'Directory' : 'File'
+            };
+            if (type === vscode.FileType.File) {
+                // 如果是文件，获取文件扩展名
+                const extname = path.extname(filePath).replace('.', '');
+                item.fileExt = extname;
+                if (!['jsx', 'tsx', 'js', 'ts'].includes(extname)) {
+                    continue;
+                }
+                const relation = await this.solveJSFile({
+                    uri: vscode.Uri.file(filePath),
+                    path: vscode.Uri.file(filePath).fsPath,
+                    exports: [],
+                    imports: [],
+                });
+                item.children = relation.exports.map((item: any) => ({
+                    id: `${filePath}@${item.name}`,
+                    title: item.name,
+                    fileType: 'Export',
+                }))
+            }
+            if (type === vscode.FileType.Directory) {
+                item.children = [];
+                await this.walk(filePath, item.children,);
+            }
+
+            parent.push(item);
+        }
+    }
+    isPathIgnored(filePath: string, directory: string,): boolean {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) return false;
+
+        for (const workspaceFolder of workspaceFolders) {
+            const gitignorePath = path.join(workspaceFolder.uri.fsPath, '.gitignore');
+
+            // 如果缓存中没有.gitignore内容，则读取并缓存
+            if (!this.gitignoreContents.has(gitignorePath)) {
+                if (fs.existsSync(gitignorePath)) {
+                    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+                    const ignoreRules = gitignoreContent.split('\n').filter(rule => !!rule.trim() && !rule.startsWith('#'));
+                    this.gitignoreContents.set(gitignorePath, ignoreRules);
+                } else {
+                    this.gitignoreContents.set(gitignorePath, []);
+                }
+            }
+
+            // 从缓存中获取.gitignore内容
+            const ignoreRules = this.gitignoreContents.get(gitignorePath)!;
+            const ignore = Ignore();
+            ignore.add(ignoreRules)
+            // 对文件路径进行匹配
+            const relativePath = path.relative(workspaceFolder.uri.fsPath, filePath,)
+            if (ignore.ignores(relativePath + '\\') || ignore.ignores(relativePath)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
     async solveFiles(pacakges: any) {
         const uris = await vscode.workspace.findFiles('{**/**.[jt]s,**/**.[jt]sx}', '{package.json,**/package.json ,**/node_modules/**, node_modules/**,dist/**,**/dist/**}');

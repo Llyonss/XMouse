@@ -5,7 +5,6 @@ export default (props: any) => {
     const [getGroups, setGroups] = createSignal([])
     const [getOptions, setOptions] = createSignal([])
     const [getValue, setValue] = createSignal([])
-    let selectRef = {};
     let dialogRef: any = {};
     if (props.ref) {
         props.ref({
@@ -35,7 +34,6 @@ export default (props: any) => {
                 <DLayout.Column style="gap:8px;">
                     <span >请选择导出组件</span>
                     <DTreeSelect
-                        ref={selectRef}
                         value={getValue()}
                         onChange={value => setValue(value)}
                         multi

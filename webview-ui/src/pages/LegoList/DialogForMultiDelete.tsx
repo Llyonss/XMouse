@@ -9,7 +9,6 @@ export default (props: any) => {
     const [getOptions, setOptions] = createSignal([])
     const [getValue, setValue] = createSignal([])
     let dialogRef: any = {};
-    let selectRef = {};
     if (props.ref) {
         props.ref({
             open: (groups: any) => {
@@ -40,7 +39,6 @@ export default (props: any) => {
                     <span >请选择组件进行删除</span>
                     <TreeSelect
                         style=""
-                        ref={selectRef}
                         value={getValue()}
                         onChange={value => setValue(value)}
                         multi

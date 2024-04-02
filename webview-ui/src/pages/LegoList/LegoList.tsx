@@ -47,7 +47,7 @@ const LegoList: Component = () => {
     })
   }
   const updateLego = (lego?: any) => {
-    addLegoDialog?.open?.(lego, 'update').then((item: any) => {
+    addLegoDialog?.open?.(lego).then((item: any) => {
       vscode.postMessage({ command: 'lego.list.update', data: { old: JSON.parse(JSON.stringify(lego)), new: JSON.parse(JSON.stringify(item)) } });
     })
   }
@@ -95,11 +95,18 @@ const LegoList: Component = () => {
     }
   })
 
+  const [getDirection, setDirection] = createSignal<any[]>([])
+  vscode.postMessage({ command: 'lego.list.direction' });
+  vscode.listenMessage('lego.list.direction', (data: any) => {
+    setDirection(data)
+  })
   vscode.listenMessage('lego.list.add', (data: any) => {
     addLego()
   })
   vscode.listenMessage('lego.list.import', (data: any) => {
-    importDialog.open().then((list: any[]) => {
+    importDialog.open({
+      direction: getDirection()
+    }).then((list: any[]) => {
       vscode.postMessage({ command: 'lego.list.updateList', data: list });
     })
   })
@@ -137,7 +144,7 @@ const LegoList: Component = () => {
             <p>1. 点击【下方按钮】或【右上方加号】，都可添加组件。</p>
             <p>2. 添加组件后，右键组件，可编辑或删除。</p>
             <p>3. 添加组件后，拖拽组件，可以拖拽到代码中。</p>
-            <button data-type="primary" onClick={() => { updateLego() }}>添加组件</button>
+            <button data-type="primary" onClick={() => { addLego() }}>添加组件</button>
           </div>
         </Match>
         <Match when={getState() === 'data'}>

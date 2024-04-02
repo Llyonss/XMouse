@@ -4,20 +4,22 @@ import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import Storage from '../storage';
 import NpmData from './LegoList.data'
+import { updateImport } from '../utilities/astTool'
 
 type Lego = { id: string, name: string, code: string, source: string, group: string };
 export class LegoListPanel implements vscode.WebviewViewProvider {
     public vscodeContext;
-    public components: any;
+    public xmFiles: any;
     public webviewView: vscode.WebviewView | undefined;
     private draging: any;
     private storage: Storage;
     private data: Lego[];
     public onDragStart = (component: any) => { };
     public onDragEnd = (component: any) => { };
-    constructor(context: vscode.ExtensionContext, components: any) {
+    constructor(context: vscode.ExtensionContext, xmFiles: any) {
         this.vscodeContext = context;
-        this.components = components;
+        this.xmFiles = xmFiles;
+        // xmFiles.solveDirection();
         this.storage = new Storage(context);
         this.data = this.storage.get('LegoList') as Lego[] || [];
         context.subscriptions.push(
@@ -27,6 +29,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                 { webviewOptions: { retainContextWhenHidden: true } }
             )
         );
+
         context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.add', () => {
             this.webviewView?.webview.postMessage({ command: 'lego.list.add' });
         }));
@@ -44,7 +47,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
 
             //时序问题和代码位置问题，入队列
             const component = this.draging;
-            const sources = (() => {
+            const depends = (() => {
                 if (!component?.source) {
                     return []
                 }
@@ -59,27 +62,38 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                 }
                 return []
             })()
-            if (!sources.length) {
+            if (!depends.length) {
                 return;
             }
 
             const text = event.contentChanges?.[0].text || '';
             const activeTextEditor = vscode.window.activeTextEditor;
             if (text.replaceAll(/[\s\n\t]*/g, '') === component.code.replaceAll(/[\s\n\t]*/g, '')) {
-                sources.forEach((source: any, index: number) => {
-                    setTimeout(() => {
-                        const importDefaultString = `import ${source.import} from '${source.from}'`;
-                        const hasImport = activeTextEditor?.document.getText().includes(importDefaultString);
+                depends.forEach(async (source: any, index: number) => {
+                    const doc = activeTextEditor?.document.getText() || depends;
+                    const dependsCodes = await updateImport(doc, depends);
+                    dependsCodes?.forEach((item) => {
+                        setTimeout(async () => {
 
-                        activeTextEditor?.edit(editBuilder => {
-                            if (!hasImport) {
-                                editBuilder.replace(new vscode.Position(0, 0), `${importDefaultString}\n`);
-                            }
-                        });
-                    }, 50 * index);
+                            activeTextEditor?.edit(editBuilder => {
+                                console.log(item)
+                                if (item.loc) {
+                                    const range = new vscode.Range(
+                                        new vscode.Position(item.loc.start.line - 1, item.loc.start.column),
+                                        new vscode.Position(item.loc.end.line - 1, item.loc.end.column)
+                                    );
+                                    editBuilder.replace(range, item.code);
+                                } else {
+                                    editBuilder.replace(new vscode.Position(0, 0), `${item.code}\n`);
+                                }
+
+                            });
+                        }, 50 * index);
+
+                    })
+
                 })
             }
-
         }));
     }
     public resolveWebviewView(
@@ -96,6 +110,9 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             if (message.command === 'lego.list.init') {
                 const data = [...NpmData, ...this.data] as Lego[];;
                 webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data });
+            }
+            if (message.command === 'lego.list.direction') {
+                this.webviewView?.webview.postMessage({ command: 'lego.list.direction', data: this.xmFiles.direction });
             }
             if (message.command === 'lego.list.add') {
                 console.log('添加', message);
