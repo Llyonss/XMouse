@@ -2,24 +2,21 @@
 来用鼠标编程吧！
 
 ## 功能点
-1. 拖拽生成组件
-
-## 拖拽组件
-![alt text](XMouseStart.gif)
-
-## 添加组件
-![alt text](XMouseAdd.gif)
+1. 可视化管理代码片段!
+2. 拖拽！拖拽！拖拽！！
 
 ## 使用指南
-1. 安装 XMouse 插件！
-2. 点击 activeBar 的 X 启动插件！
-3. 跟随指引添加组件！
-4. 愉快的拖拽吧！
+#### 拖拽组件
+![alt text](XMouseStart.gif)
+
+#### 添加组件
+![alt text](XMouseAdd.gif)
+
+## 支持尘码
+![alt text](coffee.png)
+---
 
 ## 版本情况
 ### 0.4.0 done
 * 可视化管理你的【代码片段】，并支持拖拽！
 
----
-
-**Enjoy!**
