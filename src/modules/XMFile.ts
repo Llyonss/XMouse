@@ -6,7 +6,6 @@ import * as parser from '@babel/parser';
 import * as fs from 'fs';
 import traverse from '@babel/traverse';
 import Ignore from 'ignore'
-import compiler from 'vue-template-compiler';
 
 interface FileItem {
     id: string;
