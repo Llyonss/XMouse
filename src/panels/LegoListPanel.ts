@@ -5,7 +5,6 @@ import { getNonce } from "../utilities/getNonce";
 import Storage from '../storage';
 import NpmData from './LegoList.data'
 import { updateImport } from '../utilities/astTool'
-
 type Lego = { id: string, name: string, code: string, source: string, group: string };
 export class LegoListPanel implements vscode.WebviewViewProvider {
     public vscodeContext;
@@ -65,16 +64,18 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             if (!depends.length) {
                 return;
             }
+            
+            const activeTextEditor = vscode.window.activeTextEditor;
+            if(!activeTextEditor){
+                return;
+            }
 
             const text = event.contentChanges?.[0].text || '';
-            const activeTextEditor = vscode.window.activeTextEditor;
             if (text.replaceAll(/[\s\n\t]*/g, '') === component.code.replaceAll(/[\s\n\t]*/g, '')) {
                 depends.forEach(async (source: any, index: number) => {
-                    const doc = activeTextEditor?.document.getText() || depends;
-                    const dependsCodes = await updateImport(doc, depends);
+                    const dependsCodes = await updateImport(activeTextEditor.document, depends);
                     dependsCodes?.forEach((item) => {
                         setTimeout(async () => {
-
                             activeTextEditor?.edit(editBuilder => {
                                 console.log(item)
                                 if (item.loc) {
