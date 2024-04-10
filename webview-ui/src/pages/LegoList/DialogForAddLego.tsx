@@ -27,7 +27,7 @@ export default (props: any) => {
                 <>{getIsAdd() ? '添加组件' : '编辑组件'}</>
             )}
             content={() => (
-                <DLayout.Column style="gap:8px;">
+                <DLayout.Column style="gap:8px;min-width:250px;">
                     <DLayout.Row >
                         <span style="width:5rem;">组件名：</span>
                         <input style="flex-grow: 1;" placeholder="如: ElButton按钮" value={getName()} onChange={event => setName(event.target.value)}></input>

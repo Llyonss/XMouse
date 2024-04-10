@@ -18,7 +18,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     constructor(context: vscode.ExtensionContext, xmFiles: any) {
         this.vscodeContext = context;
         this.xmFiles = xmFiles;
-        // xmFiles.solveDirection();
+
         this.storage = new Storage(context);
         this.data = this.storage.get('LegoList') as Lego[] || [];
         context.subscriptions.push(
@@ -64,9 +64,9 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             if (!depends.length) {
                 return;
             }
-            
+
             const activeTextEditor = vscode.window.activeTextEditor;
-            if(!activeTextEditor){
+            if (!activeTextEditor) {
                 return;
             }
 
@@ -113,7 +113,23 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                 webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data });
             }
             if (message.command === 'lego.list.direction') {
-                this.webviewView?.webview.postMessage({ command: 'lego.list.direction', data: this.xmFiles.direction });
+                this.xmFiles.solveDirection().then((res: any) => {
+                    console.log('res', res);
+                    this.webviewView?.webview.postMessage({ command: 'lego.list.direction', data: res });
+                })
+            }
+            if (message.command === 'lego.list.direction.update') {
+                const directory: any[] = []
+                this.xmFiles.walk(message.data.path, directory, true).then(() => {
+                    console.log('resss', directory);
+                    this.webviewView?.webview.postMessage({
+                        id: message.id, body: {
+                            data: directory,
+                            code: 0,
+                            msg: 'ok'
+                        }
+                    });
+                })
             }
             if (message.command === 'lego.list.add') {
                 console.log('添加', message);

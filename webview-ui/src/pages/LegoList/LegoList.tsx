@@ -1,9 +1,9 @@
 import type { Component } from "solid-js";
 import { createStore } from "solid-js/store";
-import { createSignal, For, Match, Switch, } from 'solid-js'
+import { createSignal, For, Match, Switch, Show } from 'solid-js'
 import { provideVSCodeDesignSystem, vsCodeButton, vsCodeTextArea } from "@vscode/webview-ui-toolkit";
 import { vscode } from "../../utilities/vscode";
-import { DAccordion, DToast, DContextMenu } from '../../components'
+import { DAccordion, DToast, DContextMenu, DTab, DTreeSelect, DTreeView } from '../../components'
 import DialogForAddLego from "./DialogForAddLego";
 import DialogForDelete from "./DialogForDelete";
 import DialogForExport from "./DialogForExport";
@@ -33,7 +33,8 @@ type LegoGroup = {
 }
 
 const LegoList: Component = () => {
-  const [getState, setState] = createSignal('loading')
+  const [getState, setState] = createSignal('loading');
+  const [getActiveTab, setActiveTab] = createSignal(['json'])
   const [legoGroupsStore, setLegoGroups] = createStore<any[]>([])
   let addLegoDialog: any = {};
   let deleteLegoDialog: any = {};
@@ -95,17 +96,17 @@ const LegoList: Component = () => {
     }
   })
 
-  const [getDirection, setDirection] = createSignal<any[]>([])
+  const [getDirectory, setDirectory] = createSignal<any[]>([])
   vscode.postMessage({ command: 'lego.list.direction' });
   vscode.listenMessage('lego.list.direction', (data: any) => {
-    setDirection(data)
+    setDirectory(data)
   })
   vscode.listenMessage('lego.list.add', (data: any) => {
     addLego()
   })
   vscode.listenMessage('lego.list.import', (data: any) => {
     importDialog.open({
-      direction: getDirection()
+      direction: getDirectory()
     }).then((list: any[]) => {
       vscode.postMessage({ command: 'lego.list.updateList', data: list });
     })
@@ -135,38 +136,101 @@ const LegoList: Component = () => {
       <DialogForImport ref={importDialog}></DialogForImport>
       <DialogForExport ref={exportDialog}></DialogForExport>
       <DialogForMultiDelete ref={multiDeleteDialog}></DialogForMultiDelete>
-      <Switch
-        fallback={<div></div>}
-      >
-        <Match when={getState() === 'empty'}>
-          <div style="padding:12px 24px">
-            <p>感谢你这么好看还订阅咱这插件！</p>
-            <p>1. 点击【下方按钮】或【右上方加号】，都可添加组件。</p>
-            <p>2. 添加组件后，右键组件，可编辑或删除。</p>
-            <p>3. 添加组件后，拖拽组件，可以拖拽到代码中。</p>
-            <button data-type="primary" onClick={() => { addLego() }}>添加组件</button>
-          </div>
-        </Match>
-        <Match when={getState() === 'data'}>
-          <DAccordion items={legoGroupsStore}>{(legoGroup: any) => (
-            <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);align-items: flex-start;">
-              <For each={legoGroup.legos}>{(lego: any) => (
-                <DContextMenu items={[
-                  { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
-                  { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
-                ]}>
-                  <LegoListItem
-                    name={lego.name}
-                    draggable={true}
-                    onDragStart={(event: any) => { handleDragStart(event, lego) }}
-                    onDragEnd={(event: any) => { handleDragEnd(event, lego) }}
-                  ></LegoListItem>
-                </DContextMenu>
-              )}</For>
-            </div>
-          )}</DAccordion>
-        </Match>
-      </Switch>
+      <DTab.Root value={getActiveTab()} onValueChange={(e) => { setActiveTab(e.value) }} style='display: flex;flex-flow: column;height: 100vh;'>
+        <DTab.List tabs={[
+          { id: 'json', label: '自定义' },
+          { id: 'workspace', label: '项目文件' },
+          // { id: 'npm', label: 'NPM包' },
+        ]}></DTab.List>
+        <DTab.Item value="workspace" style="flex: 1 1;overflow: auto;">
+          <DTreeView
+            // value={getSelectedDirection()}
+            // onChange={value => setSelectedDirection(value)}
+            data={getDirectory()}
+            load={async (item) => {
+              if (item.fileType === 'File') {
+                return item.children
+              }
+              if (item.fileType === 'Directory') {
+                const res = await vscode.call('lego.list.direction.update', item);
+                console.log(res)
+                return res
+              }
+              return []
+            }}
+            node={(item: any) => (
+              <div
+                style={item.fileType === 'Export' ? 'color:var(--link-active-foreground);cursor: grab;' : ''}
+                draggable={true}
+                onDragStart={(event: any) => {
+                  console.log('item.parent', item.parent)
+                  const name = (item.title === 'default' ? item.parent.title : item.title).split('.')[0];
+                  handleDragStart(event, {
+                    name,
+                    source: { from: item.path, import: `{ ${name} }` },
+                    code: `console.log('${name}',${name})`
+                  })
+                }}
+                onDragEnd={(event: any) => {
+                  console.log('item.parent', item.parent)
+                  const name = (item.title === 'default' ? item.parent.title : item.title).split('.')[0];
+                  handleDragStart(event, {
+                    name,
+                    source: { from: item.path, import: `{ ${name} }` },
+                    code: `console.log('${name}',${name})`
+                  })
+                }}
+              >
+                <Show when={item.fileType === 'Export'} ><i class="fa fa-external-link" style="margin-right:4px;"></i></Show>
+                <Show when={item.fileType === 'File'}><i class="fa fa-file-code-o" style="margin-right:4px;"></i></Show>
+                <Show when={item.fileType === 'Directory'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
+                <span >
+                  {item.title}
+                </span>
+              </div>
+            )}
+          // directory={true}
+          ></DTreeView>
+        </DTab.Item>
+        <DTab.Item value="npm" style="flex: 1 1;overflow: auto;">
+          NPM包
+        </DTab.Item>
+        <DTab.Item value="json" style="flex: 1 1;overflow: auto;">
+          <Switch
+            fallback={<div></div>}
+          >
+            <Match when={getState() === 'empty'}>
+              <div style="padding:12px 24px">
+                <p>感谢你这么好看还订阅咱这插件！</p>
+                <p>1. 点击【下方按钮】或【右上方加号】，都可添加组件。</p>
+                <p>2. 添加组件后，右键组件，可编辑或删除。</p>
+                <p>3. 添加组件后，拖拽组件，可以拖拽到代码中。</p>
+                <button data-type="primary" onClick={() => { addLego() }}>添加组件</button>
+              </div>
+            </Match>
+            <Match when={getState() === 'data'}>
+              <DAccordion items={legoGroupsStore}>{(legoGroup: any) => (
+                <div style="display:flex;flex-flow:row wrap;gap:16px;padding:16px;background: var(--vscode-dropdown-listBackground);align-items: flex-start;">
+                  <For each={legoGroup.legos}>{(lego: any) => (
+                    <DContextMenu items={[
+                      { id: 'edit', label: '编辑', onClick: () => { updateLego(lego) } },
+                      { id: 'delete', label: '删除', onClick: () => { deleteLego(lego) } },
+                    ]}>
+                      <LegoListItem
+                        name={lego.name}
+                        draggable={true}
+                        onDragStart={(event: any) => { handleDragStart(event, lego) }}
+                        onDragEnd={(event: any) => { handleDragEnd(event, lego) }}
+                      ></LegoListItem>
+                    </DContextMenu>
+                  )}</For>
+                </div>
+              )}</DAccordion>
+            </Match>
+          </Switch>
+        </DTab.Item>
+      </DTab.Root>
+
     </div>
   );
 };

@@ -7,15 +7,17 @@ import * as fs from 'fs';
 import traverse from '@babel/traverse';
 import Ignore from 'ignore'
 
+
+
 interface FileItem {
     id: string;
     title: string;
     fileType: string;
     fileExt?: string;
     children?: FileItem[];
+    leaf?: boolean
+    path: string
 }
-
-
 export class XMFile {
     packages: { root: string, uri: vscode.Uri, json: {}, alias: any[] }[] = [];
     files: any[] = [];
@@ -45,7 +47,7 @@ export class XMFile {
         if (workspaceFolders) {
             const result: FileItem[] = [];
             for (let workspaceFolder of workspaceFolders) {
-                await this.walk(workspaceFolder.uri.fsPath, result);
+                await this.walk(workspaceFolder.uri.fsPath, result, true);
             }
             workspaceFolders.forEach(async workspaceFolder => {
                 // 读取工作区文件夹下的文件和子目录
@@ -54,7 +56,7 @@ export class XMFile {
         }
         return []
     }
-    async walk(directory: string, parent: FileItem[]) {
+    async walk(directory: string, parent: FileItem[], lazy: boolean = false) {
         const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(directory));
 
         for (const [name, type] of entries) {
@@ -67,8 +69,10 @@ export class XMFile {
 
             const item: FileItem = {
                 id: filePath,
+                path: filePath,
                 title: name,
-                fileType: type === vscode.FileType.Directory ? 'Directory' : 'File'
+                fileType: type === vscode.FileType.Directory ? 'Directory' : 'File',
+                leaf: true
             };
             if (type === vscode.FileType.File) {
                 // 如果是文件，获取文件扩展名
@@ -77,21 +81,28 @@ export class XMFile {
                 if (!['jsx', 'tsx', 'js', 'ts'].includes(extname)) {
                     continue;
                 }
-                const relation = await this.solveJSFile({
+                const fileInfo = await this.solveJSFile({
                     uri: vscode.Uri.file(filePath),
                     path: vscode.Uri.file(filePath).fsPath,
                     exports: [],
                     imports: [],
                 });
-                item.children = relation.exports.map((item: any) => ({
+                item.children = fileInfo.exports.map((item: any) => ({
                     id: `${filePath}@${item.name}`,
+                    path: filePath,
                     title: item.name,
                     fileType: 'Export',
+                    leaf: true,
                 }))
+                item.leaf = false;
             }
             if (type === vscode.FileType.Directory) {
                 item.children = [];
-                await this.walk(filePath, item.children,);
+                item.leaf = false;
+                if (!lazy) {
+                    await this.walk(filePath, item.children, lazy);
+                }
+
             }
 
             parent.push(item);
@@ -166,7 +177,6 @@ export class XMFile {
                 'ExportNamedDeclaration|ExportDefaultDeclaration'(astPath) {
                     const node = astPath.node;
                     const exportNames = (() => {
-
                         if (types.isExportDefaultDeclaration(node)) {
 
                             // const declaration = node.declaration
@@ -194,8 +204,31 @@ export class XMFile {
                         const declaration = node.declaration;
                         if (declaration) {
                             if (types.isFunctionDeclaration(declaration)) {
-                                return [{ name: declaration.id?.name, desc: '', type: 'jsx', params: [] }]
+                                return [{ name: declaration.id?.name, desc: 'function', type: 'jsx', params: [] }]
                             }
+                            if (types.isClassDeclaration(declaration)) {
+                                return [{ name: declaration.id?.name, desc: 'class', type: 'class', params: [] }]
+                            }
+                            if (types.isTSInterfaceDeclaration(declaration)
+                                || types.isTSTypeAliasDeclaration(declaration)
+                                || types.isTSEnumDeclaration(declaration)
+                                || types.isTSDeclareFunction(declaration)
+                                || types.isTSInterfaceDeclaration(declaration)
+                                || types.isTSModuleBlock(declaration)
+                                || types.isTSModuleDeclaration(declaration)
+                            ) {
+                                /** @ts-ignore */
+                                return [{ name: declaration.id?.name, desc: declaration.type, type: 'type', params: [] }]
+                            }
+                            if (types.isVariableDeclaration(declaration)) {
+                                return declaration?.declarations.map((item: any) => ({
+                                    name: item.id?.name,
+                                    desc: '',
+                                    type: declaration.kind,
+                                    params: []
+                                }))
+                            }
+                            console.log('node', xmfile, node,)
                         }
                     })()
 

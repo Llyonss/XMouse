@@ -134,7 +134,9 @@ export function updateImport(doc: vscode.TextDocument, dependsForAdd: any[]) {
         if (['js', 'ts', 'jsx', 'tsx'].includes(fileType)) {
             docCode = doc.getText();
         }
-        const dependsCode = dependsForAdd.map(depend => `import ${depend.import} from '${depend.from}'`).join('\n')
+        console.log('relative', nodepath.isAbsolute(dependsForAdd[0].from), nodepath.relative(doc.uri.fsPath, dependsForAdd[0].from))
+
+        const dependsCode = dependsForAdd.map(depend => `import ${depend.import} from '${nodepath.isAbsolute(depend.from) ? nodepath.relative(doc.uri.fsPath, depend.from).replaceAll('\\', '/').replace('../', '').replace('.ts', '') : depend.from}'`).join('\n')
         const dependsAst = parser.parse(dependsCode, {
             sourceType: "module",
             plugins: ["jsx", "typescript", "decorators"],
@@ -187,7 +189,7 @@ export function updateImport(doc: vscode.TextDocument, dependsForAdd: any[]) {
             const code = generate.default(depend.node, { jsescOption: { minimal: true } }).code;;
             return { code };
         })
-        console.log('results',results)
+        console.log('results', results)
         results.forEach(item => {
             if (fileType === 'vue') {
                 if (item.loc) {
