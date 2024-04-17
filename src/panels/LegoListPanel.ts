@@ -22,6 +22,18 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
 
         this.storage = new Storage(context);
         this.data = this.storage.get('LegoList') as Lego[] || [];
+        xmFiles.readWorkspaceConf().then((res: any) => {
+            const map: any = {};
+            res.forEach((item: Lego) => {
+                map[String(item.group) + String(item.name)] = item;
+            })
+            this.data.forEach((item: Lego) => {
+                map[String(item.group) + String(item.name)] = item;
+            })
+            this.data = Object.values(map);
+            this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data: this.data });
+        })
+
         context.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
                 'xmouse.lego.list',
@@ -41,6 +53,9 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         }));
         context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.export', () => {
             this.webviewView?.webview.postMessage({ command: 'lego.list.export', data: JSON.stringify(this.storage.get('LegoList')) });
+        }));
+        context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.save', () => {
+            this.xmFiles.saveWorkspaceConf(this.data);
         }));
 
         context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {

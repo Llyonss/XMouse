@@ -31,6 +31,33 @@ export class XMFile {
         // this.direction = await this.solveDirection();
         // this.relations = this.solveRelation(this.files);
     }
+    async saveWorkspaceConf(configData: any) {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        workspaceFolders?.forEach(folder => {
+            const snippetsFilePath = vscode.Uri.file(path.join(folder.uri.fsPath, '.vscode', 'xmouse.json'));
+            const snippetsContent = JSON.stringify(configData, null, 2);
+            vscode.workspace.fs.writeFile(snippetsFilePath, Buffer.from(snippetsContent, 'utf-8'));
+        })
+    }
+    async readWorkspaceConf() {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const result = workspaceFolders?.map(async (folder) => {
+            const snippetsFilePath = vscode.Uri.file(path.join(folder.uri.fsPath, '.vscode', 'xmouse.json'));
+            try {
+                const file = await vscode.workspace.fs.readFile(snippetsFilePath);
+                const conf = JSON.parse(file.toString());
+                if (!Array.isArray(conf)) {
+                    return []
+                }
+                return conf.filter(item => item.hasOwnProperty('name') && item.hasOwnProperty('group') && item.hasOwnProperty('code'))
+            } catch (e) {
+                return []
+            }
+
+        }) || []
+        return (await Promise.all(result)).flat()
+    }
+
     async solvePackageJson() {
         const uris = await vscode.workspace.findFiles('{package.json,**/package.json}', '{**/node_modules/**, node_modules/**,dist/**,**/dist/**}');
         const packages = uris.map(uri => ({
