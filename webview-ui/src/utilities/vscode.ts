@@ -61,7 +61,6 @@ class VSCodeAPIWrapper {
 
       const handler = (event: any) => {
         const response = event.data;
-        console.log('response', response)
         if (response.id === eventId) {
           window.removeEventListener('message', handler);
           response.body.code === 0 ? resolve(response.body.data) : reject(response.body.msg)

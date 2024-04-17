@@ -13,6 +13,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     private draging: any;
     private storage: Storage;
     private data: Lego[];
+    private dependencieCache: any = {};
     public onDragStart = (component: any) => { };
     public onDragEnd = (component: any) => { };
     constructor(context: vscode.ExtensionContext, xmFiles: any) {
@@ -118,6 +119,38 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                     this.webviewView?.webview.postMessage({ command: 'lego.list.direction', data: res });
                 })
             }
+            if (message.command === 'lego.list.packages') {
+                this.xmFiles.solvePackage().then((res: any) => {
+                    this.webviewView?.webview.postMessage({ command: 'lego.list.packages', data: res });
+                    console.log('paaaaa', res)
+                })
+            }
+
+            if (message.command === 'lego.list.packages.dependencie') {
+                if (this.dependencieCache[message.data.dependencie]) {
+                    console.log('缓存', this.dependencieCache)
+                    this.webviewView?.webview.postMessage({
+                        id: message.id, body: {
+                            data: this.dependencieCache[message.data.dependencie],
+                            code: 0,
+                            msg: 'ok'
+                        }
+                    })
+                } else {
+                    console.log('请求', this.dependencieCache)
+                    this.xmFiles.solveDependencie(message.data.dependencie, message.data.root).then((res: any) => {
+                        this.dependencieCache[message.data.dependencie] = res.children;
+                        this.webviewView?.webview.postMessage({
+                            id: message.id, body: {
+                                data: res.children,
+                                code: 0,
+                                msg: 'ok'
+                            }
+                        })
+                    })
+                }
+
+            }
             if (message.command === 'lego.list.direction.update') {
                 const directory: any[] = []
                 this.xmFiles.walk(message.data.path, directory, true).then(() => {
@@ -130,6 +163,9 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                         }
                     });
                 })
+            }
+            if (message.command === 'lego.list.file.open') {
+                message.data
             }
             if (message.command === 'lego.list.add') {
                 console.log('添加', message);

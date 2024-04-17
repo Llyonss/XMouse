@@ -6,7 +6,7 @@ import * as parser from '@babel/parser';
 import * as fs from 'fs';
 import traverse from '@babel/traverse';
 import Ignore from 'ignore'
-
+import * as vuecompiler from '@vue/compiler-dom';
 
 
 interface FileItem {
@@ -166,8 +166,19 @@ export class XMFile {
     async solveJSFile(xmfile: any) {
         try {
             const buffer = await vscode.workspace.fs.readFile(xmfile.uri);
-            const code = buffer.toString();
-            const ast = parser.parse(code, {
+            const fileType = path.extname(xmfile.uri.fsPath).replace('.', '');
+            let docCode = '';
+            if (fileType === 'vue') {
+                const vue = vuecompiler.parse(buffer.toString());
+                const vueScript: any = vue.children.find((item: any) => item.tag === 'script')
+                const vueScriptContent = vueScript.children.find((item: any) => item.type === 2);
+                docCode = vueScriptContent.content;
+            }
+            if (['js', 'ts', 'jsx', 'tsx'].includes(fileType)) {
+                docCode = buffer.toString();
+            }
+
+            const ast = parser.parse(docCode, {
                 sourceType: "module",
                 plugins: ["jsx", "typescript", "decorators"],
                 errorRecovery: true,
@@ -228,7 +239,6 @@ export class XMFile {
                                     params: []
                                 }))
                             }
-                            console.log('node', xmfile, node,)
                         }
                     })()
 
@@ -301,5 +311,116 @@ export class XMFile {
 
     }
     solveElementui() {
+    }
+
+
+    async solvePackage() {
+        const uris = await vscode.workspace.findFiles('{**​/package.json,package.json}', '**​/node_modules/**');
+        return Promise.all(
+            uris.map(async uri => {
+                const root = path.dirname(uri.fsPath);
+                const json = require(uri.fsPath)
+                const dependencies = await this.solveDependencies(json.dependencies, root);
+                return {
+                    meta: {
+                        root,
+                        uri,
+                        json,
+                        alias: [],
+                    },
+                    id: root,
+                    title: path.basename(root),
+                    fileType: 'Directory',
+                    children: dependencies
+                }
+            })
+        )
+    }
+    async solveDependencies(dependencies: any, root: any) {
+        return Promise.all(
+            Object.keys(dependencies).map(async dependencie => {
+                // const meta = await this.solveDependencie(dependencie, root);
+                return {
+                    id: root + '/' + dependencie,
+                    title: dependencie,
+                    fileType: 'Dependencie',
+                    children: []
+                }
+            })
+        )
+
+    }
+
+    async solveDependencie(dependencie: any, root: any) {
+        const meta: any = {};
+        meta.name = dependencie
+
+        try {
+            meta.resolve = require.resolve(path.join(root, 'node_modules', dependencie));
+            const packagePath = path.join(root, 'node_modules', dependencie, 'package.json');
+            const packageJson = require(packagePath);
+
+            if (packageJson["web-types"]) {
+                const json = require(
+                    path.join(root, 'node_modules', dependencie, packageJson["web-types"])
+                );
+
+                const components = json.contributions.html["vue-components"] || json.contributions.html["tags"] || [];
+                meta.content = json;
+                meta.children = components.map((item: any) => ({
+                    id: path.join(root, 'node_modules', dependencie, item.name),
+                    title: item.name,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+            } else if (packageJson.module) {
+                const packageIndexPath = path.join(root, 'node_modules', dependencie, packageJson.module);
+                const json = await this.solveJSFile({
+                    uri: vscode.Uri.file(packageIndexPath),
+                    path: vscode.Uri.file(packageIndexPath).fsPath,
+                    exports: [],
+                    imports: [],
+                })
+                meta.content = json;
+                meta.children = json.exports.map((item: any) => ({
+                    id: path.join(root, 'node_modules', dependencie, item.name),
+                    title: item.name,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+            } else if (['js', 'jsx', 'ts', 'tsx'].includes(path.extname(meta.resolve).replace('.', ''))) {
+                const json = await import(meta.resolve);
+                meta.content = json;
+
+                meta.children = Object.keys(json).map(key => ({
+                    id: path.join(root, 'node_modules', dependencie, key),
+                    title: key,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+
+            } else if (['vue'].includes(path.extname(meta.resolve).replace('.', ''))) {
+                const json = await this.solveJSFile({
+                    uri: vscode.Uri.file(meta.resolve),
+                    path: vscode.Uri.file(meta.resolve).fsPath,
+                    exports: [],
+                    imports: [],
+                })
+                meta.content = json;
+                meta.children = Object.keys(json).map(key => ({
+                    id: path.join(root, 'node_modules', dependencie, key),
+                    title: key,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+
+            } else {
+                meta.content = 'unknow'
+                meta.children = []
+            }
+        } catch (e) {
+            meta.content = e;
+        }
+        return meta;
     }
 } 

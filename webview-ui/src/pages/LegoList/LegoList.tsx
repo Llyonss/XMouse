@@ -31,6 +31,12 @@ type LegoGroup = {
   name: string,
   legos: LegoMeta[]
 }
+function camelCase(str) {
+  const nameList = str.split('/');
+  return nameList[nameList.length - 1].replace(/[-_]([a-z])/g, function (match, group1) {
+    return group1.toUpperCase();
+  });
+}
 
 const LegoList: Component = () => {
   const [getState, setState] = createSignal('loading');
@@ -59,7 +65,6 @@ const LegoList: Component = () => {
   }
 
   const handleDragStart = (event: any, data: any) => {
-    console.log('data.code', data.code)
     event.dataTransfer.setData('text/plain', data.code);
     vscode.postMessage({ command: 'lego.list.drag.start', data: JSON.parse(JSON.stringify(data)) });
   }
@@ -128,6 +133,11 @@ const LegoList: Component = () => {
     })
   })
 
+  const [getPackages, setPackages] = createSignal([])
+  vscode.postMessage({ command: 'lego.list.packages' });
+  vscode.listenMessage('lego.list.packages', (data: any) => {
+    setPackages(data)
+  })
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
       <DToast ref={toastRef}></DToast>
@@ -140,7 +150,7 @@ const LegoList: Component = () => {
         <DTab.List tabs={[
           { id: 'json', label: '自定义' },
           { id: 'workspace', label: '项目文件' },
-          // { id: 'npm', label: 'NPM包' },
+          { id: 'npm', label: 'NPM包' },
         ]}></DTab.List>
         <DTab.Item value="workspace" style="flex: 1 1;overflow: auto;">
           <DTreeView
@@ -153,7 +163,6 @@ const LegoList: Component = () => {
               }
               if (item.fileType === 'Directory') {
                 const res = await vscode.call('lego.list.direction.update', item);
-                console.log(res)
                 return res
               }
               return []
@@ -162,9 +171,12 @@ const LegoList: Component = () => {
               <div
                 style={item.fileType === 'Export' ? 'color:var(--link-active-foreground);cursor: grab;' : ''}
                 draggable={true}
+                onDblClick={() => {
+                  vscode.call('lego.list.file.open', item);
+                }}
                 onDragStart={(event: any) => {
-                  console.log('item.parent', item.parent)
-                  const name = (item.title === 'default' ? item.parent.title : item.title).split('.')[0];
+
+                  const name = camelCase((item.title === 'default' ? item.parent.title : item.title).split('.')[0]);
                   handleDragStart(event, {
                     name,
                     source: { from: item.path, import: `{ ${name} }` },
@@ -172,8 +184,7 @@ const LegoList: Component = () => {
                   })
                 }}
                 onDragEnd={(event: any) => {
-                  console.log('item.parent', item.parent)
-                  const name = (item.title === 'default' ? item.parent.title : item.title).split('.')[0];
+                  const name = camelCase((item.title === 'default' ? item.parent.title : item.title).split('.')[0]);
                   handleDragStart(event, {
                     name,
                     source: { from: item.path, import: `{ ${name} }` },
@@ -193,7 +204,53 @@ const LegoList: Component = () => {
           ></DTreeView>
         </DTab.Item>
         <DTab.Item value="npm" style="flex: 1 1;overflow: auto;">
-          NPM包
+          <DTreeView
+            // value={getSelectedDirection()}
+            // onChange={value => setSelectedDirection(value)}
+            data={getPackages()}
+            load={async (item) => {
+              if (item.fileType === 'Dependencie') {
+                const res = await vscode.call('lego.list.packages.dependencie', { root: item.parent.id, dependencie: item.title });
+
+                return res
+              }
+              return item.children || []
+            }}
+            node={(item: any) => (
+              <div
+                style={item.fileType === 'Export' ? 'color:var(--link-active-foreground);cursor: grab;' : ''}
+                draggable={true}
+                onDblClick={() => {
+                  vscode.call('lego.list.file.open', item);
+                }}
+                onDragStart={(event: any) => {
+                  const name = camelCase((item.title === 'default' ? item.parent.title : item.title).split('.')[0]);
+                  handleDragStart(event, {
+                    name,
+                    source: { from: item.path, import: `{ ${name} }` },
+                    code: `console.log('${name}',${name})`
+                  })
+                }}
+                onDragEnd={(event: any) => {
+                  const name = camelCase((item.title === 'default' ? item.parent.title : item.title).split('.')[0]);
+                  handleDragStart(event, {
+                    name,
+                    source: { from: item.path, import: `{ ${name} }` },
+                    code: `console.log('${name}',${name})`
+                  })
+                }}
+              >
+                <Show when={item.fileType === 'Export'} ><i class="fa fa-external-link" style="margin-right:4px;"></i></Show>
+                <Show when={item.fileType === 'File'}><i class="fa fa-file-code-o" style="margin-right:4px;"></i></Show>
+                <Show when={item.fileType === 'Directory'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
+                <Show when={item.fileType === 'Package'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
+                <span >
+                  {item.title}
+                </span>
+              </div>
+            )}
+          // directory={true}
+          ></DTreeView>
         </DTab.Item>
         <DTab.Item value="json" style="flex: 1 1;overflow: auto;">
           <Switch
