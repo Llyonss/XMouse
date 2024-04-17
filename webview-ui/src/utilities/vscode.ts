@@ -55,7 +55,22 @@ class VSCodeAPIWrapper {
       console.log(message);
     }
   }
+  public call(command: string, data: any) {
+    return new Promise((resolve, reject) => {
+      const eventId = setTimeout(() => { })
 
+      const handler = (event: any) => {
+        const response = event.data;
+        if (response.id === eventId) {
+          window.removeEventListener('message', handler);
+          response.body.code === 0 ? resolve(response.body.data) : reject(response.body.msg)
+        }
+      }
+      window.addEventListener('message', handler)
+
+      this.vsCodeApi?.postMessage({ id: eventId, command, data });
+    })
+  }
   /**
    * Get the persistent state stored for this webview.
    *

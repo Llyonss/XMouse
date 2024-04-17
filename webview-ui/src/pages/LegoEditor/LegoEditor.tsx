@@ -9,12 +9,10 @@ provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 const LegoEditor: Component = () => {
   const [getLego, setLego] = createSignal({})
   vscode.listenMessage('lego.editor.updateLego', (data: any) => {
-    console.log('datadatadata', data)
     setLego(data)
   })
 
   const handleChange = (name, value, event) => {
-    console.log(name, value, event)
     vscode.postMessage({
       command: 'lego.editor.propChange',
       data: {

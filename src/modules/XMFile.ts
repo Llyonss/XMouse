@@ -6,6 +6,8 @@ import * as parser from '@babel/parser';
 import * as fs from 'fs';
 import traverse from '@babel/traverse';
 import Ignore from 'ignore'
+import * as vuecompiler from '@vue/compiler-dom';
+
 
 interface FileItem {
     id: string;
@@ -13,9 +15,9 @@ interface FileItem {
     fileType: string;
     fileExt?: string;
     children?: FileItem[];
+    leaf?: boolean
+    path: string
 }
-
-
 export class XMFile {
     packages: { root: string, uri: vscode.Uri, json: {}, alias: any[] }[] = [];
     files: any[] = [];
@@ -29,6 +31,33 @@ export class XMFile {
         // this.direction = await this.solveDirection();
         // this.relations = this.solveRelation(this.files);
     }
+    async saveWorkspaceConf(configData: any) {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        workspaceFolders?.forEach(folder => {
+            const snippetsFilePath = vscode.Uri.file(path.join(folder.uri.fsPath, '.vscode', 'xmouse.json'));
+            const snippetsContent = JSON.stringify(configData, null, 2);
+            vscode.workspace.fs.writeFile(snippetsFilePath, Buffer.from(snippetsContent, 'utf-8'));
+        })
+    }
+    async readWorkspaceConf() {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const result = workspaceFolders?.map(async (folder) => {
+            const snippetsFilePath = vscode.Uri.file(path.join(folder.uri.fsPath, '.vscode', 'xmouse.json'));
+            try {
+                const file = await vscode.workspace.fs.readFile(snippetsFilePath);
+                const conf = JSON.parse(file.toString());
+                if (!Array.isArray(conf)) {
+                    return []
+                }
+                return conf.filter(item => item.hasOwnProperty('name') && item.hasOwnProperty('group') && item.hasOwnProperty('code'))
+            } catch (e) {
+                return []
+            }
+
+        }) || []
+        return (await Promise.all(result)).flat()
+    }
+
     async solvePackageJson() {
         const uris = await vscode.workspace.findFiles('{package.json,**/package.json}', '{**/node_modules/**, node_modules/**,dist/**,**/dist/**}');
         const packages = uris.map(uri => ({
@@ -45,7 +74,7 @@ export class XMFile {
         if (workspaceFolders) {
             const result: FileItem[] = [];
             for (let workspaceFolder of workspaceFolders) {
-                await this.walk(workspaceFolder.uri.fsPath, result);
+                await this.walk(workspaceFolder.uri.fsPath, result, true);
             }
             workspaceFolders.forEach(async workspaceFolder => {
                 // 读取工作区文件夹下的文件和子目录
@@ -54,7 +83,7 @@ export class XMFile {
         }
         return []
     }
-    async walk(directory: string, parent: FileItem[]) {
+    async walk(directory: string, parent: FileItem[], lazy: boolean = false) {
         const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(directory));
 
         for (const [name, type] of entries) {
@@ -67,8 +96,10 @@ export class XMFile {
 
             const item: FileItem = {
                 id: filePath,
+                path: filePath,
                 title: name,
-                fileType: type === vscode.FileType.Directory ? 'Directory' : 'File'
+                fileType: type === vscode.FileType.Directory ? 'Directory' : 'File',
+                leaf: true
             };
             if (type === vscode.FileType.File) {
                 // 如果是文件，获取文件扩展名
@@ -77,21 +108,28 @@ export class XMFile {
                 if (!['jsx', 'tsx', 'js', 'ts'].includes(extname)) {
                     continue;
                 }
-                const relation = await this.solveJSFile({
+                const fileInfo = await this.solveJSFile({
                     uri: vscode.Uri.file(filePath),
                     path: vscode.Uri.file(filePath).fsPath,
                     exports: [],
                     imports: [],
                 });
-                item.children = relation.exports.map((item: any) => ({
+                item.children = fileInfo.exports.map((item: any) => ({
                     id: `${filePath}@${item.name}`,
+                    path: filePath,
                     title: item.name,
                     fileType: 'Export',
+                    leaf: true,
                 }))
+                item.leaf = false;
             }
             if (type === vscode.FileType.Directory) {
                 item.children = [];
-                await this.walk(filePath, item.children,);
+                item.leaf = false;
+                if (!lazy) {
+                    await this.walk(filePath, item.children, lazy);
+                }
+
             }
 
             parent.push(item);
@@ -155,8 +193,19 @@ export class XMFile {
     async solveJSFile(xmfile: any) {
         try {
             const buffer = await vscode.workspace.fs.readFile(xmfile.uri);
-            const code = buffer.toString();
-            const ast = parser.parse(code, {
+            const fileType = path.extname(xmfile.uri.fsPath).replace('.', '');
+            let docCode = '';
+            if (fileType === 'vue') {
+                const vue = vuecompiler.parse(buffer.toString());
+                const vueScript: any = vue.children.find((item: any) => item.tag === 'script')
+                const vueScriptContent = vueScript.children.find((item: any) => item.type === 2);
+                docCode = vueScriptContent.content;
+            }
+            if (['js', 'ts', 'jsx', 'tsx'].includes(fileType)) {
+                docCode = buffer.toString();
+            }
+
+            const ast = parser.parse(docCode, {
                 sourceType: "module",
                 plugins: ["jsx", "typescript", "decorators"],
                 errorRecovery: true,
@@ -166,7 +215,6 @@ export class XMFile {
                 'ExportNamedDeclaration|ExportDefaultDeclaration'(astPath) {
                     const node = astPath.node;
                     const exportNames = (() => {
-
                         if (types.isExportDefaultDeclaration(node)) {
 
                             // const declaration = node.declaration
@@ -194,7 +242,29 @@ export class XMFile {
                         const declaration = node.declaration;
                         if (declaration) {
                             if (types.isFunctionDeclaration(declaration)) {
-                                return [{ name: declaration.id?.name, desc: '', type: 'jsx', params: [] }]
+                                return [{ name: declaration.id?.name, desc: 'function', type: 'jsx', params: [] }]
+                            }
+                            if (types.isClassDeclaration(declaration)) {
+                                return [{ name: declaration.id?.name, desc: 'class', type: 'class', params: [] }]
+                            }
+                            if (types.isTSInterfaceDeclaration(declaration)
+                                || types.isTSTypeAliasDeclaration(declaration)
+                                || types.isTSEnumDeclaration(declaration)
+                                || types.isTSDeclareFunction(declaration)
+                                || types.isTSInterfaceDeclaration(declaration)
+                                || types.isTSModuleBlock(declaration)
+                                || types.isTSModuleDeclaration(declaration)
+                            ) {
+                                /** @ts-ignore */
+                                return [{ name: declaration.id?.name, desc: declaration.type, type: 'type', params: [] }]
+                            }
+                            if (types.isVariableDeclaration(declaration)) {
+                                return declaration?.declarations.map((item: any) => ({
+                                    name: item.id?.name,
+                                    desc: '',
+                                    type: declaration.kind,
+                                    params: []
+                                }))
                             }
                         }
                     })()
@@ -268,5 +338,116 @@ export class XMFile {
 
     }
     solveElementui() {
+    }
+
+
+    async solvePackage() {
+        const uris = await vscode.workspace.findFiles('{**​/package.json,package.json}', '**​/node_modules/**');
+        return Promise.all(
+            uris.map(async uri => {
+                const root = path.dirname(uri.fsPath);
+                const json = require(uri.fsPath)
+                const dependencies = await this.solveDependencies(json.dependencies, root);
+                return {
+                    meta: {
+                        root,
+                        uri,
+                        json,
+                        alias: [],
+                    },
+                    id: root,
+                    title: path.basename(root),
+                    fileType: 'Directory',
+                    children: dependencies
+                }
+            })
+        )
+    }
+    async solveDependencies(dependencies: any, root: any) {
+        return Promise.all(
+            Object.keys(dependencies).map(async dependencie => {
+                // const meta = await this.solveDependencie(dependencie, root);
+                return {
+                    id: root + '/' + dependencie,
+                    title: dependencie,
+                    fileType: 'Dependencie',
+                    children: []
+                }
+            })
+        )
+
+    }
+
+    async solveDependencie(dependencie: any, root: any) {
+        const meta: any = {};
+        meta.name = dependencie
+
+        try {
+            meta.resolve = require.resolve(path.join(root, 'node_modules', dependencie));
+            const packagePath = path.join(root, 'node_modules', dependencie, 'package.json');
+            const packageJson = require(packagePath);
+
+            if (packageJson["web-types"]) {
+                const json = require(
+                    path.join(root, 'node_modules', dependencie, packageJson["web-types"])
+                );
+
+                const components = json.contributions.html["vue-components"] || json.contributions.html["tags"] || [];
+                meta.content = json;
+                meta.children = components.map((item: any) => ({
+                    id: path.join(root, 'node_modules', dependencie, item.name),
+                    title: item.name,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+            } else if (packageJson.module) {
+                const packageIndexPath = path.join(root, 'node_modules', dependencie, packageJson.module);
+                const json = await this.solveJSFile({
+                    uri: vscode.Uri.file(packageIndexPath),
+                    path: vscode.Uri.file(packageIndexPath).fsPath,
+                    exports: [],
+                    imports: [],
+                })
+                meta.content = json;
+                meta.children = json.exports.map((item: any) => ({
+                    id: path.join(root, 'node_modules', dependencie, item.name),
+                    title: item.name,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+            } else if (['js', 'jsx', 'ts', 'tsx'].includes(path.extname(meta.resolve).replace('.', ''))) {
+                const json = await import(meta.resolve);
+                meta.content = json;
+
+                meta.children = Object.keys(json).map(key => ({
+                    id: path.join(root, 'node_modules', dependencie, key),
+                    title: key,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+
+            } else if (['vue'].includes(path.extname(meta.resolve).replace('.', ''))) {
+                const json = await this.solveJSFile({
+                    uri: vscode.Uri.file(meta.resolve),
+                    path: vscode.Uri.file(meta.resolve).fsPath,
+                    exports: [],
+                    imports: [],
+                })
+                meta.content = json;
+                meta.children = Object.keys(json).map(key => ({
+                    id: path.join(root, 'node_modules', dependencie, key),
+                    title: key,
+                    path: dependencie,
+                    fileType: 'Export'
+                }))
+
+            } else {
+                meta.content = 'unknow'
+                meta.children = []
+            }
+        } catch (e) {
+            meta.content = e;
+        }
+        return meta;
     }
 } 

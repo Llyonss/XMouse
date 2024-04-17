@@ -8,7 +8,10 @@
     &[data-part='list'] {
         margin: 0 0 -0.1em;
         overflow: visible;
+        text-overflow: ellipsis;
         border-bottom: 1px solid var(--vscode-editor-foreground);
+        display: flex;
+        flex-flow: row nowrap;
     }
 
     &[data-part='trigger'] {
@@ -17,8 +20,10 @@
         padding: 0.3em 0.5em 0.4em;
         border-radius: 0.2em 0.2em 0 0;
         overflow: visible;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-size: inherit;
-        background-color: var(--vscode-editor-background);
+        background-color: unset;
         border: unset;
         color: var(--vscode-editor-foreground);
     }
@@ -55,7 +60,6 @@
 
     &[data-part='content'] {
         position: relative;
-        z-index: 2;
         padding: 0.5em 0.5em 0.7em;
         border-radius: 0 0.2em 0.2em 0.2em;
     }
@@ -70,7 +74,6 @@
 
     &[data-part='indicator'] {
         background-color: red;
-        z-index: 10;
     }
 
     &[data-part='indicator'][data-orientation='horizontal'] {

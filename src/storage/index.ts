@@ -6,7 +6,6 @@ export default class Storage {
         this.context = context;
     }
     set(key: string, value: any) {
-        console.log('setset',key, value)
         this.context.globalState.update(key, value);
     }
     get(key: string) {

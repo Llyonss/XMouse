@@ -2,7 +2,7 @@
   "name": "XMouse",
   "displayName": "XMouse",
   "description": "let's code by mouse",
-  "version": "0.4.6",
+  "version": "0.4.10",
   "license": "MIT",
   "publisher": "dustycoder",
   "icon": "assets/x.png",
@@ -37,6 +37,10 @@
         "title": "导出"
       },
       {
+        "command": "xmouse.lego.list.save",
+        "title": "保存到项目中"
+      },
+      {
         "command": "xmouse.lego.list.multi-delete",
         "title": "批量删除"
       }
@@ -52,6 +56,10 @@
     },
     "menus": {
       "view/title": [
+        {
+          "command": "xmouse.lego.list.save",
+          "when": "view == xmouse.lego.list"
+        },
         {
           "command": "xmouse.lego.list.add",
           "when": "view == xmouse.lego.list",
@@ -102,16 +110,21 @@
     "eslint": "^7.19.0",
     "glob": "^7.1.6",
     "prettier": "^2.2.1",
+    "typedoc": "^0.25.13",
     "typescript": "^4.1.3",
     "vscode-test": "^1.5.0"
   },
   "dependencies": {
+    "@babel/core": "^7.24.4",
     "@babel/generator": "^7.23.6",
+    "@babel/node": "^7.23.9",
     "@babel/parser": "^7.23.9",
     "@babel/traverse": "^7.23.9",
     "@babel/types": "^7.23.9",
+    "@react-docgen/cli": "^2.0.3",
     "@vue/compiler-dom": "^3.4.21",
     "ignore": "^5.3.1",
+    "react-docgen": "^7.0.3",
     "vue-template-compiler": "^2.7.16"
   }
 }

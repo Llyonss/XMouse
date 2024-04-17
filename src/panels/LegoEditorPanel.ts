@@ -63,7 +63,6 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(message => {
             // 处理从Webview传递过来的消息
             if (message.command === 'lego.editor.propChange') {
-                console.log('mmmm', message)
                 this.setAttr2Code(this.activeLego, message.data.name || "", message.data.value || "");
             }
         }, undefined, this.vscodeContext.subscriptions);
