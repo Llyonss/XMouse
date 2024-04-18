@@ -2,7 +2,7 @@
   "name": "XMouse",
   "displayName": "XMouse",
   "description": "let's code by mouse",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "license": "MIT",
   "publisher": "dustycoder",
   "icon": "assets/x.png",
@@ -13,7 +13,7 @@
   "engines": {
     "vscode": "^1.75.0"
   },
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {

@@ -6,9 +6,6 @@
 node_modules
 # Ignore test files
 .vscode-test/**
-out
-docs
-dist
 
 out/test/**
 
