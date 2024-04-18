@@ -58,6 +58,24 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
             this.xmFiles.saveWorkspaceConf(this.data);
         }));
 
+        // 注册到监听队列中
+        context.subscriptions.push(vscode.commands.registerCommand(
+            'xmouse.lego.add',
+            (uri: vscode.Uri) => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor) return;
+
+                const text = editor.document.getText(editor.selection);
+                this.data.push({
+                    name: '未命名' + (new Date()).getTime(),
+                    group: '快捷添加',
+                    code: text,
+                } as Lego);
+                this.storage.set('LegoList', this.data);
+                const data = [...NpmData, ...this.data] as Lego[];;
+                this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data });
+            }
+        ))
         context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
 
             //时序问题和代码位置问题，入队列
