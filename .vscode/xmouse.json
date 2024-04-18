@@ -1,0 +1,65 @@
+[
+  {
+    "group": "SolidJS",
+    "name": "createSignal",
+    "source": {
+      "from": "solid-js",
+      "import": "createSignal"
+    },
+    "code": "  const [getState, setState] = createSignal('loading')"
+  },
+  {
+    "group": "其他",
+    "name": "ignore",
+    "source": {
+      "from": "",
+      "import": ""
+    },
+    "code": "/** @ts-ignore */\n"
+  },
+  {
+    "group": "其他",
+    "name": "resolve",
+    "source": {
+      "from": "",
+      "import": ""
+    },
+    "code": "\nconst test = require(path.relative('C:/Users/欧拯救/Desktop/XMouse/src', require.resolve('C:/Users/欧拯救/Desktop/win11React/node_modules/react')))"
+  },
+  {
+    "group": "其他",
+    "name": "child.exec",
+    "source": {
+      "from": "",
+      "import": ""
+    },
+    "code": " const childProcess = exec(command, { cwd: context.extensionPath });\n  console.log('workspacePath', workspacePath)\n  // 监听标准输出\n  childProcess.stdout?.on('data', (data) => {\n    console.log(data.toString());\n  });\n\n  // 监听错误输出\n  childProcess.stderr?.on('data', (data) => {\n    console.error(data.toString());\n  });\n  // 监听命令执行完毕事件\n  childProcess.on('close', (code) => {\n    if (code === 0) {\n      console.log('Command executed successfully!');\n    } else {\n      console.error(`Command execution failed with code ${code}`);\n    }\n  });"
+  },
+  {
+    "group": "VSCode",
+    "name": "遍历文件",
+    "source": {
+      "from": "vscode",
+      "import": "* as vscode"
+    },
+    "code": "  vscode.workspace.findFiles('{**​/package.json,package.json}', '**​/node_modules/**').then(uris => { \n    \n  })"
+  },
+  {
+    "group": "VSCode",
+    "name": "遍历目录",
+    "source": {
+      "from": "vscode",
+      "import": "* as vscode"
+    },
+    "code": "vscode.workspace.fs.readDirectory(vscode.Uri.file(path.join(packages[0].root, 'node_modules', item))).then((rrr) => {})"
+  },
+  {
+    "name": "test",
+    "group": "test",
+    "source": {
+      "from": "",
+      "import": ""
+    },
+    "code": "test"
+  }
+]
