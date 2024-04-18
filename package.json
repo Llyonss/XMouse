@@ -1,19 +1,19 @@
 {
-  "name": "XMouse",
-  "displayName": "XMouse",
-  "description": "let's code by mouse",
-  "version": "0.4.10",
-  "license": "MIT",
   "publisher": "dustycoder",
-  "icon": "assets/x.png",
+  "name": "xmouse",
+  "displayName": "xmouse",
+  "version": "0.4.8",
+  "description": "let's code by mouse",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Llyonss/XMouse.git"
   },
+  "main": "./out/extension.js",
+  "icon": "resources/x.png",
   "engines": {
     "vscode": "^1.75.0"
   },
-  "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
@@ -24,8 +24,8 @@
         "command": "xmouse.lego.list.add",
         "title": "添加组件",
         "icon": {
-          "light": "assets/add.light.svg",
-          "dark": "assets/add.dark.svg"
+          "light": "resources/add.light.svg",
+          "dark": "resources/add.dark.svg"
         }
       },
       {
@@ -50,7 +50,7 @@
         {
           "id": "xmouse",
           "title": "xmouse",
-          "icon": "assets/x.png"
+          "icon": "resources/x.png"
         }
       ]
     },
@@ -90,41 +90,59 @@
     }
   },
   "scripts": {
-    "install:all": "npm install && cd webview-ui && npm install",
-    "start:webview": "cd webview-ui && npm run start",
-    "build:webview": "cd webview-ui && npm run build",
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts"
-  },
-  "devDependencies": {
-    "@types/babel__generator": "^7.6.8",
-    "@types/babel__traverse": "^7.20.5",
-    "@types/glob": "^7.1.3",
-    "@types/node": "^12.11.7",
-    "@types/vscode": "^1.46.0",
-    "@typescript-eslint/eslint-plugin": "^4.14.1",
-    "@typescript-eslint/parser": "^4.14.1",
-    "eslint": "^7.19.0",
-    "glob": "^7.1.6",
-    "prettier": "^2.2.1",
-    "typedoc": "^0.25.13",
-    "typescript": "^4.1.3",
-    "vscode-test": "^1.5.0"
+    "dev:client": "vite",
+    "build:client": "vite build",
+    "preview:client": "vite build",
+    "build:dev": "vite build && npm run build:ts",
+    "publish": "vsce publish --no-dependencies",
+    "pack": "vsce package --no-dependencies",
+    "build": "rimraf dist && vite build && pnpm run build:ts --minify",
+    "build:ts": "tsup src/extension.ts --external=vscode -d out",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:ui": "eslint --inspect-config",
+    "release": "bumpp"
   },
   "dependencies": {
-    "@babel/core": "^7.24.4",
-    "@babel/generator": "^7.23.6",
-    "@babel/node": "^7.23.9",
-    "@babel/parser": "^7.23.9",
-    "@babel/traverse": "^7.23.9",
-    "@babel/types": "^7.23.9",
-    "@react-docgen/cli": "^2.0.3",
-    "@vue/compiler-dom": "^3.4.21",
+    "@ark-ui/solid": "^2.2.0",
+    "@babel/generator": "^7.24.4",
+    "@babel/parser": "^7.24.4",
+    "@babel/traverse": "^7.24.1",
+    "@babel/types": "^7.24.0",
+    "@digichanges/solid-multiselect": "^0.0.10",
+    "@suid/icons-material": "^0.7.0",
+    "@suid/material": "^0.16.0",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "@vue/compiler-dom": "^3.4.23",
+    "cui-solid": "^0.1.39",
+    "cytoscape": "^3.29.0",
+    "cytoscape-cise": "^1.0.0",
     "ignore": "^5.3.1",
-    "react-docgen": "^7.0.3",
+    "solid-js": "^1.8.16",
     "vue-template-compiler": "^2.7.16"
-  }
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.15.0",
+    "@types/babel__generator": "^7.6.8",
+    "@types/babel__traverse": "^7.20.5",
+    "@types/cytoscape": "^3.21.0",
+    "@types/glob": "^8.1.0",
+    "@types/node": "^20.12.7",
+    "@types/vscode": "^1.88.0",
+    "@types/vscode-webview": "^1.57.5",
+    "bumpp": "^9.4.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-format": "^0.1.1",
+    "glob": "^10.3.12",
+    "less": "^4.2.0",
+    "rimraf": "^5.0.5",
+    "sass": "^1.75.0",
+    "taze": "^0.13.6",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.9",
+    "vite-plugin-solid": "^2.10.2",
+    "vscode-test": "^1.6.1"
+  },
+  "preview": true
 }

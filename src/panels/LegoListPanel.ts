@@ -264,11 +264,11 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         this.webviewView = webviewView;
     }
     private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
-        const stylesUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.css"]);
+        const stylesUri = getUri(webview, extensionUri, ["out", "client", "assets", "index.css"]);
         // The JS file from the SolidJS build output
-        const scriptUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.js"]);
-        const fontUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "cui.ttf"]);
-        const assetsUrl = getUri(webview, extensionUri, ["webview-ui", "build", "assets"]);
+        const scriptUri = getUri(webview, extensionUri, ["out", "client", "assets","index.js"]);
+        const fontUri = getUri(webview, extensionUri, ["out", "client", "assets","cui.ttf"]);
+        const assetsUrl = getUri(webview, extensionUri, ["out", "client", "assets"]);
         return  /*html*/ `
             <!DOCTYPE html>
             <html lang="en">
@@ -285,11 +285,11 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                     @font-face {
                         font-family: 'FontAwesome';
                         src: url('${assetsUrl}/fontawesome-webfont.eot?v=4.7.0');
-                        src: url('${assetsUrl}/fontawesome-webfont.eot?#iefix&v=4.7.0') format('embedded-opentype'), 
-                            url('${assetsUrl}/fontawesome-webfont.woff2?v=4.7.0') format('woff2'), 
-                            url('${assetsUrl}/fonts/fontawesome-webfont.woff?v=4.7.0') format('woff'), 
-                            url('${assetsUrl}/fonts/fontawesome-webfont.ttf?v=4.7.0') format('truetype'), 
-                            url('${assetsUrl}/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular') format('svg');
+                        src: url('${assetsUrl}/fontawesome-webfont.eot?#iefix&v=4.7.0') format('embedded-opentype'),
+                            url('${assetsUrl}/fontawesome-webfont.woff2?v=4.7.0') format('woff2'),
+                            url('${assetsUrl}/fontawesome-webfont.woff?v=4.7.0') format('woff'),
+                            url('${assetsUrl}/fontawesome-webfont.ttf?v=4.7.0') format('truetype'),
+                            url('${assetsUrl}/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular') format('svg');
                         font-weight: normal;
                         font-style: normal;
                       }

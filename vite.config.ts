@@ -1,12 +1,13 @@
-import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
+import { defineConfig } from 'vite'
+import Solid from 'vite-plugin-solid'
 
 export default defineConfig({
-  plugins: [solidPlugin()],
+  plugins: [
+    Solid(),
+  ],
   build: {
-    target: "esnext",
-    polyfillDynamicImport: false,
-    outDir: "build",
+    target: 'esnext',
+    outDir: 'out/client',
     rollupOptions: {
       output: {
         entryFileNames: `assets/[name].js`,
@@ -15,4 +16,4 @@ export default defineConfig({
       },
     },
   },
-});
+})
