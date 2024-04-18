@@ -1,20 +1,30 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
-    "outDir": "out",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": ["vite/client"],
     "lib": [
-      "es6",
       "dom",
-      "ES2021"
+      "dom.iterable",
+      "esnext"
     ],
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "outDir": "build",
     "sourceMap": true,
-    "rootDir": "src",
-    "strict": true
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
-  "exclude": [
-    "node_modules",
-    ".vscode-test",
-    "webview-ui"
+  "include": [
+    "./client"
   ]
 }

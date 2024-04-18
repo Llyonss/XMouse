@@ -13,6 +13,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     private draging: any;
     private storage: Storage;
     private data: Lego[];
+    private dependencieCache: any = {};
     public onDragStart = (component: any) => { };
     public onDragEnd = (component: any) => { };
     constructor(context: vscode.ExtensionContext, xmFiles: any) {
@@ -21,6 +22,18 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
 
         this.storage = new Storage(context);
         this.data = this.storage.get('LegoList') as Lego[] || [];
+        xmFiles.readWorkspaceConf().then((res: any) => {
+            const map: any = {};
+            res.forEach((item: Lego) => {
+                map[String(item.group) + String(item.name)] = item;
+            })
+            this.data.forEach((item: Lego) => {
+                map[String(item.group) + String(item.name)] = item;
+            })
+            this.data = Object.values(map);
+            this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data: this.data });
+        })
+
         context.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
                 'xmouse.lego.list',
@@ -40,6 +53,9 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         }));
         context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.export', () => {
             this.webviewView?.webview.postMessage({ command: 'lego.list.export', data: JSON.stringify(this.storage.get('LegoList')) });
+        }));
+        context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.save', () => {
+            this.xmFiles.saveWorkspaceConf(this.data);
         }));
 
         context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
@@ -118,6 +134,38 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                     this.webviewView?.webview.postMessage({ command: 'lego.list.direction', data: res });
                 })
             }
+            if (message.command === 'lego.list.packages') {
+                this.xmFiles.solvePackage().then((res: any) => {
+                    this.webviewView?.webview.postMessage({ command: 'lego.list.packages', data: res });
+                    console.log('paaaaa', res)
+                })
+            }
+
+            if (message.command === 'lego.list.packages.dependencie') {
+                if (this.dependencieCache[message.data.dependencie]) {
+                    console.log('缓存', this.dependencieCache)
+                    this.webviewView?.webview.postMessage({
+                        id: message.id, body: {
+                            data: this.dependencieCache[message.data.dependencie],
+                            code: 0,
+                            msg: 'ok'
+                        }
+                    })
+                } else {
+                    console.log('请求', this.dependencieCache)
+                    this.xmFiles.solveDependencie(message.data.dependencie, message.data.root).then((res: any) => {
+                        this.dependencieCache[message.data.dependencie] = res.children;
+                        this.webviewView?.webview.postMessage({
+                            id: message.id, body: {
+                                data: res.children,
+                                code: 0,
+                                msg: 'ok'
+                            }
+                        })
+                    })
+                }
+
+            }
             if (message.command === 'lego.list.direction.update') {
                 const directory: any[] = []
                 this.xmFiles.walk(message.data.path, directory, true).then(() => {
@@ -130,6 +178,9 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                         }
                     });
                 })
+            }
+            if (message.command === 'lego.list.file.open') {
+                message.data
             }
             if (message.command === 'lego.list.add') {
                 console.log('添加', message);
@@ -213,11 +264,11 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         this.webviewView = webviewView;
     }
     private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
-        const stylesUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.css"]);
+        const stylesUri = getUri(webview, extensionUri, ["out", "client", "assets", "index.css"]);
         // The JS file from the SolidJS build output
-        const scriptUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.js"]);
-        const fontUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "cui.ttf"]);
-        const assetsUrl = getUri(webview, extensionUri, ["webview-ui", "build", "assets"]);
+        const scriptUri = getUri(webview, extensionUri, ["out", "client", "assets","index.js"]);
+        const fontUri = getUri(webview, extensionUri, ["out", "client", "assets","cui.ttf"]);
+        const assetsUrl = getUri(webview, extensionUri, ["out", "client", "assets"]);
         return  /*html*/ `
             <!DOCTYPE html>
             <html lang="en">
@@ -234,11 +285,11 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
                     @font-face {
                         font-family: 'FontAwesome';
                         src: url('${assetsUrl}/fontawesome-webfont.eot?v=4.7.0');
-                        src: url('${assetsUrl}/fontawesome-webfont.eot?#iefix&v=4.7.0') format('embedded-opentype'), 
-                            url('${assetsUrl}/fontawesome-webfont.woff2?v=4.7.0') format('woff2'), 
-                            url('${assetsUrl}/fonts/fontawesome-webfont.woff?v=4.7.0') format('woff'), 
-                            url('${assetsUrl}/fonts/fontawesome-webfont.ttf?v=4.7.0') format('truetype'), 
-                            url('${assetsUrl}/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular') format('svg');
+                        src: url('${assetsUrl}/fontawesome-webfont.eot?#iefix&v=4.7.0') format('embedded-opentype'),
+                            url('${assetsUrl}/fontawesome-webfont.woff2?v=4.7.0') format('woff2'),
+                            url('${assetsUrl}/fontawesome-webfont.woff?v=4.7.0') format('woff'),
+                            url('${assetsUrl}/fontawesome-webfont.ttf?v=4.7.0') format('truetype'),
+                            url('${assetsUrl}/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular') format('svg');
                         font-weight: normal;
                         font-style: normal;
                       }

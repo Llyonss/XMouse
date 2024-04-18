@@ -11,15 +11,8 @@ out/test/**
 # Ignore source code
 src/**
 
-# Ignore all webview-ui files except the build directory
-webview-ui/src/**
-webview-ui/public/**
-webview-ui/scripts/**
-webview-ui/index.html
-webview-ui/README.md
-webview-ui/package.json
-webview-ui/package-lock.json
-webview-ui/node_modules/**
+# Ignore all client files except the build directory
+client/**
 
 # Ignore Misc
 .yarnrc

@@ -1,0 +1,41 @@
+[data-scope="layout"] {
+
+    // &[data-layout="component-list"] {
+    &[data-part="root"] {
+        display: grid;
+        grid-template-areas:
+            'head head'
+            'aside main'
+        ;
+        grid-template-rows: 2rem 1fr;
+        grid-template-columns: 4rem 1fr;
+        height: 100vh;
+        width: 100vw;
+    }
+
+    &[data-part="head"] {
+        grid-area: head;
+        display: flex;
+        flex-flow: row;
+    }
+
+    &[data-part="aside"] {
+        grid-area: aside;
+        overflow-y: auto;
+    }
+
+    &[data-part="main"] {
+        grid-area: main;
+        overflow-y: auto;
+    }
+
+    &[data-part="column"] {
+        display: flex;
+        flex-flow: column;
+    }
+
+    &[data-part="row"] {
+        display: flex;
+        flex-flow: row;
+    }
+}

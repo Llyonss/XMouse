@@ -1,0 +1,10 @@
+import { TreeSelect } from 'cui-solid'
+import 'cui-solid/src/theme/TreeSelect.less'
+import 'cui-solid/src/theme/Dropdown.less'
+import 'cui-solid/src/theme/Tree.less'
+import 'cui-solid/src/theme/Value.less'
+import 'cui-solid/src/theme/Tag.less'
+import 'cui-solid/src/theme/Icon.less'
+import 'cui-solid/src/theme/Checkbox.less'
+import './index.less'
+export default TreeSelect

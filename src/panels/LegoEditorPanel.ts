@@ -63,16 +63,15 @@ export class LegoEditorPanel implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(message => {
             // 处理从Webview传递过来的消息
             if (message.command === 'lego.editor.propChange') {
-                console.log('mmmm', message)
                 this.setAttr2Code(this.activeLego, message.data.name || "", message.data.value || "");
             }
         }, undefined, this.vscodeContext.subscriptions);
     }
     private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
         // 返回完整的HTML内容
-        const stylesUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.css"]);
+        const stylesUri = getUri(webview, extensionUri, ["out", "client", "assets", "index.css"]);
         // The JS file from the SolidJS build output
-        const scriptUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.js"]);
+        const scriptUri = getUri(webview, extensionUri, ["out", "client", "assets", "index.js"]);
         const nonce = getNonce();
 
         return  /*html*/ `

@@ -1,0 +1,56 @@
+body {
+  padding: 0;
+  margin: 0;
+}
+
+
+input,
+textarea {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  color: var(--input-foreground);
+  background: var(--input-background);
+  border-radius: calc(var(--corner-radius-round) * 1px);
+  border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
+  height: calc(var(--input-height) * 1px);
+  min-width: var(--input-min-width);
+}
+
+textarea {
+  height: calc(var(--input-height) * 3px);
+}
+
+button {
+  &[data-type='primary'] {
+    align-items: center;
+    border: 1px solid var(--vscode-button-border, transparent);
+    border-radius: 2px;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    line-height: 18px;
+    padding: 4px;
+    text-align: center;
+    width: 100%;
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+  }
+
+  &[data-type='secondary'] {
+    border: 1px solid var(--vscode-button-secondaryBorder, transparent);
+    border-radius: 2px;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    line-height: 18px;
+    padding: 4px;
+    text-align: center;
+    width: 100%;
+    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryBackground);
+  }
+}
