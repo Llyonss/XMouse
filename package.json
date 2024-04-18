@@ -37,6 +37,10 @@
         "title": "导出"
       },
       {
+        "command": "xmouse.lego.list.save",
+        "title": "保存到项目中"
+      },
+      {
         "command": "xmouse.lego.list.multi-delete",
         "title": "批量删除"
       }
@@ -52,6 +56,10 @@
     },
     "menus": {
       "view/title": [
+        {
+          "command": "xmouse.lego.list.save",
+          "when": "view == xmouse.lego.list"
+        },
         {
           "command": "xmouse.lego.list.add",
           "when": "view == xmouse.lego.list",
