@@ -11,15 +11,15 @@
 
 ### 拖拽组件
 
-![alt text](./screetshots/XMouseStart.gif)
+![alt text](./screenshots/XMouseStart.gif)
 
 ### 添加组件
 
-![alt text](./screetshots/XMouseAdd.gif)
+![alt text](./screenshots/XMouseAdd.gif)
 
 ## 支持尘码
 
-![alt text](./screetshots/coffee.png)
+![alt text](./screenshots/coffee.png)
 
 ---
 
@@ -28,3 +28,7 @@
 ### 0.4.0 done
 
 - 可视化管理你的【代码片段】，并支持拖拽！
+
+## 贡献
+
+请查看[贡献指南](./CONTRIBUTING.md)

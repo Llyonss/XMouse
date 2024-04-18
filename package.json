@@ -82,6 +82,9 @@
     }
   },
   "scripts": {
+    "dev:client": "vite",
+    "build:client": "vite build",
+    "preview:client": "vite build",
     "build:dev": "vite build && npm run build:ts",
     "publish": "vsce publish --no-dependencies",
     "pack": "vsce package --no-dependencies",
@@ -124,9 +127,9 @@
     "eslint-plugin-format": "^0.1.1",
     "glob": "^10.3.12",
     "less": "^4.2.0",
-    "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
     "sass": "^1.75.0",
+    "taze": "^0.13.6",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5",
     "vite": "^5.2.9",
