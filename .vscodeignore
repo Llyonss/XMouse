@@ -3,9 +3,10 @@
 
 # Ignore extension configs
 .vscode/**
-
+node_modules
 # Ignore test files
 .vscode-test/**
+
 out/test/**
 
 # Ignore source code
@@ -23,3 +24,5 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+
+

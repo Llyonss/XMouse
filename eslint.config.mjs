@@ -5,6 +5,7 @@ export default antfu({
   markdown: true,
   yaml: true,
   gitignore: true,
+  solid: true,
   test: true,
   formatters: true,
   stylistics: true,
