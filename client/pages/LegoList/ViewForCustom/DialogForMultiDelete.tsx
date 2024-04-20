@@ -1,38 +1,31 @@
-import { createSignal, Show } from 'solid-js'
-import { DDialog, DLayout } from '../../components'
-import { Portal } from 'solid-js/web'
-import Close from './close.svg'
+import { createSignal } from 'solid-js'
+import { DDialog as useDDialog, DLayout } from '../../../components'
 import { TreeSelect } from 'cui-solid'
-
-export default (props: any) => {
+export default () => {
+    const [DDialog, openDDialog] = useDDialog()
     const [getGroups, setGroups] = createSignal([])
     const [getOptions, setOptions] = createSignal([])
     const [getValue, setValue] = createSignal([])
-    let dialogRef: any = {};
-    if (props.ref) {
-        props.ref({
-            open: (groups: any) => {
-                setGroups(groups);
-                setValue([])
-                setOptions(
-                    groups?.map((group: any, groupIndex: number) => ({
-                        id: groupIndex + 1,
-                        title: group.name,
-                        children: group.legos.map((item: any, itemIndex: number) => ({
-                            id: (groupIndex + 1) + '_' + itemIndex, title: item.name, data: item
-                        }))
-                    })) || []
-                )
-
-                return dialogRef.open()
-            }
-        })
+    const open = (data: any) => {
+        setGroups(data);
+        setValue([])
+        setOptions(
+            data?.map((group: any, groupIndex: number) => ({
+                id: groupIndex + 1,
+                title: group.name,
+                children: group.legos.map((item: any, itemIndex: number) => ({
+                    id: (groupIndex + 1) + '_' + itemIndex, title: item.name, data: item
+                }))
+            })) || []
+        )
+        return openDDialog()
     }
-    return (
+
+    const DialogForMultiDelete = (props: any) => (
         <DDialog
-            ref={dialogRef}
+            trigger={props.trigger}
             title={() => (<>
-                批量删除组件
+                批量删除
             </>)}
             content={() => (<>
                 <DLayout.Column style="gap:8px;">
@@ -67,4 +60,5 @@ export default (props: any) => {
         ></DDialog >
 
     )
+    return [DialogForMultiDelete, open]
 }
