@@ -124,6 +124,7 @@
     "@suid/material": "^0.16.0",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "@vue/compiler-dom": "^3.4.23",
+    "@zag-js/solid": "^0.47.0",
     "cui-solid": "^0.1.39",
     "cytoscape": "^3.29.0",
     "cytoscape-cise": "^1.0.0",

@@ -1,17 +1,14 @@
 import { createSignal, } from 'solid-js'
-import { DDialog } from '../../components'
-export default (props) => {
-    let dialogRef = {};
+import { DDialog as useDDialog } from '../../../components'
+export default () => {
     const [getData, setData] = createSignal({ name: '' })
-    props?.ref?.({
-        open(data: any) {
-            setData(data)
-            return dialogRef.open()
-        }
-    })
-    return (
+    const [DDialog, openDDialog] = useDDialog()
+    const open = (data: any) => {
+        setData(data)
+        return openDDialog()
+    }
+    const Dialog = () => (
         <DDialog
-            ref={dialogRef}
             title={() => '删除组件'}
             content={() => `确定删除【${getData().name}】吗？`}
             footer={(close: () => {}) => (
@@ -26,4 +23,5 @@ export default (props) => {
             )}
         />
     )
+    return [Dialog, open]
 }
