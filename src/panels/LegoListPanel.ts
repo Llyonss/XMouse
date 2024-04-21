@@ -4,6 +4,7 @@ import { getUri } from '../utilities/getUri'
 import { getNonce } from '../utilities/getNonce'
 import Storage from '../storage'
 import { updateImport } from '../utilities/astTool'
+import solveExports from '../modules/solveExports'
 import NpmData from './LegoList.data'
 
 interface Lego { id: string, name: string, code: string, source: string, group: string }
@@ -110,7 +111,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
           dependsCodes?.forEach((item) => {
             setTimeout(async () => {
               activeTextEditor?.edit((editBuilder) => {
-                console.log(item)
                 if (item.loc) {
                   const range = new vscode.Range(
                     new vscode.Position(item.loc.start.line - 1, item.loc.start.column),
@@ -140,6 +140,16 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
 
     webviewView.webview.onDidReceiveMessage((message) => {
+      const responce = (data) => {
+        webviewView.webview.postMessage({
+          id: message.id,
+          body: {
+            data,
+            code: 0,
+            msg: 'ok',
+          },
+        })
+      }
       if (message.command === 'lego.list.init') {
         const data = [...NpmData, ...this.data] as Lego[]
         webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
@@ -147,7 +157,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
 
       if (message.command === 'lego.list.direction') {
         this.xmFiles.solveDirection().then((res: any) => {
-          console.log('res', res)
           this.webviewView?.webview.postMessage({ command: 'lego.list.direction', data: res })
         })
       }
@@ -163,41 +172,36 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
               },
             },
           )
-          console.log('paaaaa', res)
         })
       }
 
       if (message.command === 'lego.list.packages.dependencie') {
         if (this.dependencieCache[message.data.dependencie]) {
-          console.log('缓存', this.dependencieCache)
-          this.webviewView?.webview.postMessage({
-            id: message.id,
-            body: {
-              data: this.dependencieCache[message.data.dependencie],
-              code: 0,
-              msg: 'ok',
-            },
-          })
+          responce(this.dependencieCache[message.data.dependencie])
         }
         else {
-          console.log('请求', this.dependencieCache)
-          this.xmFiles.solveDependencie(message.data.dependencie, message.data.root).then((res: any) => {
-            this.dependencieCache[message.data.dependencie] = res.children
-            this.webviewView?.webview.postMessage({
-              id: message.id,
-              body: {
-                data: res.children,
-                code: 0,
-                msg: 'ok',
-              },
-            })
+          solveExports(message.data.root, message.data.dependencie).then((data) => {
+            const result = data.map(item => ({
+              id: path.join(message.data.root, message.data.dependencie, item.name),
+              title: item.name,
+              fileType: 'Export',
+            }))
+            this.dependencieCache[message.data.dependencie] = result
+            responce(result)
           })
         }
       }
+
+      // else {
+      //   this.xmFiles.solveDependencie(message.data.dependencie, message.data.root).then((res: any) => {
+      //     this.dependencieCache[message.data.dependencie] = res.children
+      //     responce(res.children)
+      //   })
+      // }
+
       if (message.command === 'lego.list.direction.update') {
         const directory: any[] = []
         this.xmFiles.walk(message.data.path, directory, true).then(() => {
-          console.log('resss', directory)
           this.webviewView?.webview.postMessage({
             id: message.id,
             body: {
@@ -212,14 +216,12 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         message.data
 
       if (message.command === 'lego.list.add') {
-        console.log('添加', message)
         this.data.push(message.data)
         this.storage.set('LegoList', this.data)
         const data = [...NpmData, ...this.data] as Lego[]
         webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
       }
       if (message.command === 'lego.list.update') {
-        console.log('更新', message)
         const index = this.data.findIndex(({ group, name }) => group === message.data.old.group && name === message.data.old.name)
         if (index === -1)
           return
@@ -231,7 +233,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         return
       }
       if (message.command === 'lego.list.delete') {
-        console.log('删除', message)
         const index = this.data.findIndex(({ group, name }) => group === message.data.group && name === message.data.name)
         if (index === -1)
           return
@@ -243,19 +244,16 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         return
       }
       if (message.command === 'lego.list.updateList') {
-        console.log('message.dataList', message.data)
         message.data?.forEach((item: any) => {
           const index = this.data.findIndex(({ name, group }) => name === item.name && group === item.group)
           const isAdd = index === -1
           if (isAdd) {
-            console.log('list加', item)
             this.data.push(item)
             this.storage.set('LegoList', this.data)
             return
           }
           const isUpdate = true
           if (isUpdate) {
-            console.log('list更', item)
             this.data[index] = item
             this.storage.set('LegoList', this.data)
           }
@@ -264,7 +262,6 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
       }
       if (message.command === 'lego.list.deleteList') {
-        console.log('list删除', message.data)
         message.data?.forEach((item: any) => {
           const index = this.data.findIndex(({ group, name }) => group === item.group && name === item.name)
           if (index === -1)
@@ -276,15 +273,13 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         const data = [...NpmData, ...this.data] as Lego[]
         webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
       }
-      if (message.command === 'lego.list.drag.start') {
+      if (message.command === 'lego.list.drag.start')
         this.draging = message.data
-        console.log('setDraging', this.draging)
-      }
+
       if (message.command === 'lego.list.drag.end') {
         // todo: 时序问题
         setTimeout(() => {
           this.draging = null
-          console.log('setDraging', null)
         }, 16)
       }
     }, undefined, this.vscodeContext.subscriptions)

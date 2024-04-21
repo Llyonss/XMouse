@@ -3,7 +3,6 @@
 
 # Ignore extension configs
 .vscode/**
-node_modules
 # Ignore test files
 .vscode-test/**
 
