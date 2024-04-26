@@ -34,7 +34,7 @@ export async function loadCode(uri) {
     return buffer.toString()
   }
 }
-async function loadJson(jsonPath) {
+export async function loadJson(jsonPath) {
   const packageFile = await vscode.workspace.fs.readFile(
     vscode.Uri.file(jsonPath),
   )
@@ -50,88 +50,28 @@ export async function solveExports(code, uri) {
       plugins: ['jsx', 'typescript', 'decorators'],
       errorRecovery: true,
     })
+
     const exports: any = []
     traverse(ast, {
       ExportDefaultDeclaration(astPath: any) {
         exports.push({
-          exportType: 'default',
-          returnType: '',
-          debug: astPath,
-          name: (() => {
-            console.log('ExportDefaultDeclaration', astPath.node)
-            // astPath.node.specifiers
-            return ''
-          })(),
+          name: 'default',
+          type: astPath.node.declaration.type,
         })
       },
       ExportNamedDeclaration(astPath: any) {
-        const specifiers = astPath.node.specifiers
+        const specifiers = astPath.node?.specifiers || []
         specifiers.forEach((specifier: any) => {
           if (types.isExportSpecifier(specifier))
-            exports.push({ name: specifier.exported.name })
+            exports.push({ name: specifier.exported?.name })
         })
-
-        // exports.push({
-        //   name: (() => {
-        //     console.log('ExportNamedDeclaration', astPath.node)
-        //     // astPath.node.specifiers
-        //   })(),
-        // })
+        exports.push({ name: astPath.node?.declaration?.id?.name, type: astPath.node?.declaration?.type })
       },
-      //   'ExportNamedDeclaration|ExportDefaultDeclaration': function (astPath) {
-
-      //     const node = astPath.node
-      //     const exportNames = (() => {
-      //       if (types.isExportDefaultDeclaration(node)) {
-      //         return [{ name: 'default', desc: '', type: 'jsx', params: [] }]
-      //       }
-      //       if (!types.isExportNamedDeclaration(node))
-      //         return []
-      //       const specifiers = node.specifiers
-      //       if (specifiers.length) {
-      //         return specifiers.map((specifier) => {
-      //           if (types.isExportSpecifier(specifier)) {
-      //             const exported = specifier.exported as types.Identifier
-      //             return { name: exported.name, desc: '', type: 'jsx', params: [] }
-      //           }
-      //         }) || []
-      //       }
-      //       const declaration = node.declaration
-      //       if (declaration) {
-      //         if (types.isFunctionDeclaration(declaration))
-      //           return [{ name: declaration.id?.name, desc: 'function', type: 'jsx', params: [] }]
-
-      //         if (types.isClassDeclaration(declaration))
-      //           return [{ name: declaration.id?.name, desc: 'class', type: 'class', params: [] }]
-
-      //         if (types.isTSInterfaceDeclaration(declaration)
-      //           || types.isTSTypeAliasDeclaration(declaration)
-      //           || types.isTSEnumDeclaration(declaration)
-      //           || types.isTSDeclareFunction(declaration)
-      //           || types.isTSInterfaceDeclaration(declaration)
-      //           || types.isTSModuleBlock(declaration)
-      //           || types.isTSModuleDeclaration(declaration)
-      //         ) {
-      //           /** @ts-expect-error */
-      //           return [{ name: declaration.id?.name, desc: declaration.type, type: 'type', params: [] }]
-      //         }
-      //         if (types.isVariableDeclaration(declaration)) {
-      //           return declaration?.declarations.map((item: any) => ({
-      //             name: item.id?.name,
-      //             desc: '',
-      //             type: declaration.kind,
-      //             params: [],
-      //           }))
-      //         }
-      //       }
-      //     })()
-
-      //     xmfile.exports.push(...(exportNames || []))
-      //   },
     })
     return exports
   }
   catch (e) {
+    // console.log('eee', e)
   }
 }
 export async function solveWebType(dependencie, root) {
@@ -152,7 +92,7 @@ export async function solveWebType(dependencie, root) {
   }
 }
 
-export default async function (packageUri, dependencieName) {
+export async function autoSolve(packageUri, dependencieName) {
   const filePath = resolveModule(dependencieName, { paths: packageUri }) || ''
   if (!filePath)
     return []
@@ -162,7 +102,7 @@ export default async function (packageUri, dependencieName) {
   try {
     const code = await loadCode(filePath)
     const exports = await solveExports(code, filePath)
-    if (exports.length)
+    if (exports?.length)
       result.exports = exports
   }
   catch (e) { error.exports = e }
@@ -176,18 +116,6 @@ export default async function (packageUri, dependencieName) {
     }
   }
   catch (e) { error.runtime = e }
-
-  try {
-    // todo: 实现性API, 打包cjs之后无法使用
-    // test('test', getExportsStatic)
-    // const exports = await getExportsStatic(dependencieName, { url: packageUri })
-    // if (exports.length) {
-    //   result.statics = exports.map(item => ({
-    //     name: item,
-    //   }))
-    // }
-  }
-  catch (e) { error.statics = e }
 
   try {
     const exports = await importModule(`file://${filePath}`)
@@ -206,6 +134,8 @@ export default async function (packageUri, dependencieName) {
   }
   catch (e) { error.webtypes = e }
 
-  console.log('exports:', filePath, '\n', { dependencieName, packageUri }, '\n', result, '\n', error)
+  // console.log('exports:', filePath, '\n', { dependencieName, packageUri }, '\n', result, '\n', error, result.webtypes || result.imports || result.runtime || result.statics || result.exports || [])
   return result.webtypes || result.imports || result.runtime || result.statics || result.exports || []
 }
+
+export default autoSolve

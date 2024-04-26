@@ -49,9 +49,5 @@ export default () => {
             </>)}
         ></DDialog >
     )
-    return [DialogForImport, () => {
-        openDDialog().then((list: any[]) => {
-            vscode.postMessage({ command: 'lego.list.updateList', data: list });
-        })
-    }]
+    return [DialogForImport, openDDialog]
 }

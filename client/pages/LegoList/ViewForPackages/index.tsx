@@ -30,7 +30,7 @@ export default () => {
             data={getPackages()}
             load={async (item) => {
                 if (item.fileType === 'Dependencie') {
-                    const res = await vscode.call('lego.list.packages.dependencie', {
+                    const res = await vscode.call('lego.list.exports', {
                         root: item.parent.id,
                         dependencie: item.title
                     });

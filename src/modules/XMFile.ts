@@ -83,10 +83,6 @@ export class XMFile {
       const result: FileItem[] = []
       for (const workspaceFolder of workspaceFolders)
         await this.walk(workspaceFolder.uri.fsPath, result, true)
-
-      workspaceFolders.forEach(async (workspaceFolder) => {
-        // 读取工作区文件夹下的文件和子目录
-      })
       return result
     }
     return []
@@ -377,8 +373,7 @@ export class XMFile {
 
   async solveDependencies(dependencies: any, root: any) {
     return Promise.all(
-      Object.keys(dependencies).map(async (dependencie) => {
-        // const meta = await this.solveDependencie(dependencie, root);
+      Object.keys(dependencies).map((dependencie) => {
         return {
           id: `${root}/${dependencie}`,
           title: dependencie,

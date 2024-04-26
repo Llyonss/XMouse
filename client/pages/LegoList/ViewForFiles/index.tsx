@@ -24,9 +24,9 @@ const handleDrag = (event: any, type: any, item: any) => {
 }
 const LegoList: Component = () => {
     const [getDirectory, setDirectory] = createSignal([])
-    vscode.postMessage({ command: 'lego.list.direction' });
-    vscode.listenMessage('lego.list.direction', (data: any) => {
-        setDirectory(data)
+    vscode.call('lego.list.workspace', {}).then((res: any) => {
+        console.log('workspace',res)
+        setDirectory(res)
     })
 
     return (
@@ -35,10 +35,13 @@ const LegoList: Component = () => {
                 data={getDirectory()}
                 load={async (item) => {
                     if (item.fileType === 'File') {
-                        return item.children
+                        const res = await vscode.call('lego.list.file', JSON.parse(JSON.stringify(item)) );
+                        console.log('File',res)
+                        return res
                     }
                     if (item.fileType === 'Directory') {
-                        const res = await vscode.call('lego.list.direction.update', item);
+                        const res = await vscode.call('lego.list.directory',  JSON.parse(JSON.stringify(item)));
+                        console.log('Directory',res)
                         return res
                     }
                     return []

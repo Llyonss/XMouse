@@ -1,11 +1,14 @@
 import * as path from 'node:path'
 import * as vscode from 'vscode'
-import { getUri } from '../utilities/getUri'
-import { getNonce } from '../utilities/getNonce'
-import Storage from '../storage'
-import { updateImport } from '../utilities/astTool'
-import solveExports from '../modules/solveExports'
-import NpmData from './LegoList.data'
+
+import { getUri } from '../../utilities/getUri'
+import { getNonce } from '../../utilities/getNonce'
+import { updateImport } from '../../utilities/astTool'
+import solveExports from '../../modules/solveExports'
+import NpmData from '../LegoList.data'
+import CustomService from './Service/CustomService'
+import DirectoryService from './Service/DirectoryService'
+import PackageService from './Service/PackageService'
 
 interface Lego { id: string, name: string, code: string, source: string, group: string }
 export class LegoListPanel implements vscode.WebviewViewProvider {
@@ -13,17 +16,14 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
   public xmFiles: any
   public webviewView: vscode.WebviewView | undefined
   private draging: any
-  private storage: Storage
   private data: Lego[]
-  private dependencieCache: any = {}
-  public onDragStart = (component: any) => { }
-  public onDragEnd = (component: any) => { }
+  private customService = new CustomService()
+  private directoryService = new DirectoryService()
+  private packageService = new PackageService()
   constructor(context: vscode.ExtensionContext, xmFiles: any) {
     this.vscodeContext = context
     this.xmFiles = xmFiles
 
-    this.storage = new Storage(context)
-    this.data = this.storage.get('LegoList') as Lego[] || []
     xmFiles.readWorkspaceConf().then((res: any) => {
       const map: any = {}
       res.forEach((item: Lego) => {
@@ -36,14 +36,8 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
       this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data: this.data })
     })
 
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        'xmouse.lego.list',
-        this,
-        { webviewOptions: { retainContextWhenHidden: true } },
-      ),
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider('xmouse.lego.list', this, { webviewOptions: { retainContextWhenHidden: true } }),
     )
-
     context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.add', () => {
       this.webviewView?.webview.postMessage({ command: 'lego.list.add' })
     }))
@@ -51,10 +45,10 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
       this.webviewView?.webview.postMessage({ command: 'lego.list.multi-delete' })
     }))
     context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.import', () => {
-      this.webviewView?.webview.postMessage({ command: 'lego.list.import' })
+      this.webviewView?.webview.postMessage({ command: 'command.lego.list.import' })
     }))
     context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.export', () => {
-      this.webviewView?.webview.postMessage({ command: 'lego.list.export', data: JSON.stringify(this.storage.get('LegoList')) })
+      this.webviewView?.webview.postMessage({ command: 'lego.list.export' })
     }))
     context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.save', () => {
       this.xmFiles.saveWorkspaceConf(this.data)
@@ -67,16 +61,15 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         const editor = vscode.window.activeTextEditor
         if (!editor)
           return
-
         const text = editor.document.getText(editor.selection)
-        this.data.push({
-          name: `未命名${(new Date()).getTime()}`,
-          group: '快捷添加',
-          code: text,
-        } as Lego)
-        this.storage.set('LegoList', this.data)
-        const data = [...NpmData, ...this.data] as Lego[]
-        this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data })
+        this.customService.addLego({
+          data: {
+            name: `未命名${(new Date()).getTime()}`,
+            group: '快捷添加',
+            code: text,
+          },
+        })
+        this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data: this.data })
       },
     ))
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
@@ -140,139 +133,35 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
 
     webviewView.webview.onDidReceiveMessage((message) => {
-      const responce = (data) => {
+      const responce = (err, data) => {
         webviewView.webview.postMessage({
           id: message.id,
-          body: {
-            data,
-            code: 0,
-            msg: 'ok',
-          },
+          body: { data, code: err, msg: 'ok' },
         })
       }
-      if (message.command === 'lego.list.init') {
-        const data = [...NpmData, ...this.data] as Lego[]
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
+      const apis = {
+        // // PakcageApi:
+        'lego.list.packages': () => this.packageService.getPackages(message),
+        'lego.list.exports': () => this.packageService.getExports(message),
+        // DirectoryApi
+        'lego.list.workspace': () => this.directoryService.getWorkspace(message),
+        'lego.list.directory': () => this.directoryService.getDirectory(message),
+        'lego.list.file': () => this.directoryService.getFile(message),
+        // CustomApi
+        'lego.list.get': () => this.customService.getLego(message),
+        'lego.list.add': () => this.customService.addLego(message),
+        'lego.list.update': () => this.customService.updateLego(message),
+        'lego.list.delete': () => this.customService.deleteLego(message),
+        'lego.list.deleteMulti': () => this.customService.deleteMultiLego(message),
+        'lego.list.import': () => this.customService.importLego(message),
       }
 
-      if (message.command === 'lego.list.direction') {
-        this.xmFiles.solveDirection().then((res: any) => {
-          this.webviewView?.webview.postMessage({ command: 'lego.list.direction', data: res })
-        })
-      }
-      if (message.command === 'lego.list.packages') {
-        this.xmFiles.solvePackage().then((res: any) => {
-          this.webviewView?.webview.postMessage(
-            {
-              id: message.id,
-              body: {
-                data: res,
-                code: 0,
-                msg: 'ok',
-              },
-            },
-          )
+      if (apis[message.command]) {
+        Promise.resolve(apis[message.command]())?.then(([err, res]) => {
+          responce(err, res)
         })
       }
 
-      if (message.command === 'lego.list.packages.dependencie') {
-        if (this.dependencieCache[message.data.dependencie]) {
-          responce(this.dependencieCache[message.data.dependencie])
-        }
-        else {
-          solveExports(message.data.root, message.data.dependencie).then((data) => {
-            const result = data.map(item => ({
-              id: path.join(message.data.root, message.data.dependencie, item.name),
-              title: item.name,
-              fileType: 'Export',
-            }))
-            this.dependencieCache[message.data.dependencie] = result
-            responce(result)
-          })
-        }
-      }
-
-      // else {
-      //   this.xmFiles.solveDependencie(message.data.dependencie, message.data.root).then((res: any) => {
-      //     this.dependencieCache[message.data.dependencie] = res.children
-      //     responce(res.children)
-      //   })
-      // }
-
-      if (message.command === 'lego.list.direction.update') {
-        const directory: any[] = []
-        this.xmFiles.walk(message.data.path, directory, true).then(() => {
-          this.webviewView?.webview.postMessage({
-            id: message.id,
-            body: {
-              data: directory,
-              code: 0,
-              msg: 'ok',
-            },
-          })
-        })
-      }
-      if (message.command === 'lego.list.file.open')
-        message.data
-
-      if (message.command === 'lego.list.add') {
-        this.data.push(message.data)
-        this.storage.set('LegoList', this.data)
-        const data = [...NpmData, ...this.data] as Lego[]
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
-      }
-      if (message.command === 'lego.list.update') {
-        const index = this.data.findIndex(({ group, name }) => group === message.data.old.group && name === message.data.old.name)
-        if (index === -1)
-          return
-
-        this.data[index] = message.data.new
-        this.storage.set('LegoList', this.data)
-        const data = [...NpmData, ...this.data] as Lego[]
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
-        return
-      }
-      if (message.command === 'lego.list.delete') {
-        const index = this.data.findIndex(({ group, name }) => group === message.data.group && name === message.data.name)
-        if (index === -1)
-          return
-
-        this.data.splice(index, 1)
-        this.storage.set('LegoList', this.data)
-        const data = [...NpmData, ...this.data] as Lego[]
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
-        return
-      }
-      if (message.command === 'lego.list.updateList') {
-        message.data?.forEach((item: any) => {
-          const index = this.data.findIndex(({ name, group }) => name === item.name && group === item.group)
-          const isAdd = index === -1
-          if (isAdd) {
-            this.data.push(item)
-            this.storage.set('LegoList', this.data)
-            return
-          }
-          const isUpdate = true
-          if (isUpdate) {
-            this.data[index] = item
-            this.storage.set('LegoList', this.data)
-          }
-        })
-        const data = [...NpmData, ...this.data] as Lego[]
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
-      }
-      if (message.command === 'lego.list.deleteList') {
-        message.data?.forEach((item: any) => {
-          const index = this.data.findIndex(({ group, name }) => group === item.group && name === item.name)
-          if (index === -1)
-            return
-
-          this.data.splice(index, 1)
-        })
-        this.storage.set('LegoList', this.data)
-        const data = [...NpmData, ...this.data] as Lego[]
-        webviewView.webview.postMessage({ command: 'lego.list.updateLegos', data })
-      }
       if (message.command === 'lego.list.drag.start')
         this.draging = message.data
 

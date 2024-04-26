@@ -100,11 +100,12 @@
     }
   },
   "scripts": {
-    "dev:client": "vite",
-    "dev:extension": "npm run esbuild-base -- --sourcemap --watch",
-    "dev": "dev:client &&  dev:extension",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "dev:client": "vite build --sourcemap",
+    "dev:extension": "npm run esbuild-base -- --sourcemap",
+    "dev": "npm run dev:client && npm run dev:extension",
     "build:client": "vite build",
-    "build:extension": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "build:extension": "npm run esbuild-base -- --minify",
     "build": "rimraf out && pnpm run build:client && pnpm run build:extension ",
     "publish": "vsce publish --no-dependencies",
     "pack": "vsce package --no-dependencies",
