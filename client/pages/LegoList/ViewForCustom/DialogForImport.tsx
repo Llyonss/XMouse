@@ -10,11 +10,6 @@ export default () => {
     const [getJson, setJson] = createSignal('')
     const [getErrorInfo, setErrorInfo] = createSignal('')
     const [DDialog, openDDialog] = useDDialog()
-    vscode.listenMessage('lego.list.import', (data: any) => {
-        openDDialog().then((list: any[]) => {
-            vscode.postMessage({ command: 'lego.list.updateList', data: list });
-        })
-    })
 
     const DialogForImport = (props: any) => (
         <DDialog
@@ -54,9 +49,5 @@ export default () => {
             </>)}
         ></DDialog >
     )
-    return [DialogForImport, () => {
-        openDDialog().then((list: any[]) => {
-            vscode.postMessage({ command: 'lego.list.updateList', data: list });
-        })
-    }]
+    return [DialogForImport, openDDialog]
 }

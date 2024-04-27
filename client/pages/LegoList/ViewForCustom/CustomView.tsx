@@ -24,11 +24,10 @@ function handleDrag(event: any, type: any, data: any) {
 const LegoList: Component = (props: any) => {
     // 初始化数据
     const [legoGroupsStore, setLegoGroups] = createStore<any[]>([])
-    vscode.postMessage({ command: 'lego.list.init' });
-    vscode.listenMessage('lego.list.updateLegos', (data: any) => {
+    const updateLegoGroupStore = (data: any) => {
         setLegoGroups(Object.values(
             [
-                ...data.map((item: any) => ({
+                ...data.filter(item => item).map((item: any) => ({
                     group: item.group,
                     name: item.name,
                     source: item.source,
@@ -45,6 +44,12 @@ const LegoList: Component = (props: any) => {
                 return result;
             }, {})
         ))
+    }
+    vscode.call('lego.list.get', {}).then(res => {
+        updateLegoGroupStore(res)
+    })
+    vscode.listenMessage('lego.list.fresh', res => {
+        updateLegoGroupStore(res)
     })
     const slots: any = {
         dialog: [],
@@ -53,7 +58,7 @@ const LegoList: Component = (props: any) => {
         emptyButton: [],
     }
 
-    CustomViewPlugin.map(install => { install(slots, legoGroupsStore) })
+    CustomViewPlugin.map(install => { install(slots, legoGroupsStore, updateLegoGroupStore) })
     return (<>
         {/* <section>{slots.operate}</section> */}
         <Switch fallback={<div></div>}>

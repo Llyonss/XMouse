@@ -73,9 +73,5 @@ export default () => {
 
         )
     }
-
-    vscode.listenMessage('lego.list.export', (data: any) => {
-        openDialogForExport()
-    })
     return [DialogForExport, openDialogForExport]
 }

@@ -1,9 +1,9 @@
 {
+  "publisher": "dustycoder",
   "name": "xmouse",
   "displayName": "XMouse",
-  "version": "0.4.12",
+  "version": "0.4.13",
   "description": "let's code by mouse",
-  "publisher": "dustycoder",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
   "main": "./out/extension.js",
   "icon": "resources/x.png",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.88.0"
   },
   "contributes": {
     "commands": [
@@ -100,14 +100,15 @@
     }
   },
   "scripts": {
-    "dev:client": "vite",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "dev:client": "vite build --sourcemap",
+    "dev:extension": "npm run esbuild-base -- --sourcemap",
+    "dev": "npm run dev:client && npm run dev:extension",
     "build:client": "vite build",
-    "preview:client": "vite build",
-    "build:dev": "vite build && npm run build:ts",
+    "build:extension": "npm run esbuild-base -- --minify",
+    "build": "rimraf out && pnpm run build:client && pnpm run build:extension ",
     "publish": "vsce publish --no-dependencies",
     "pack": "vsce package --no-dependencies",
-    "build": "rimraf dist && vite build && pnpm run build:ts --minify",
-    "build:ts": "tsup src/extension.ts --external=vscode -d out",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:ui": "eslint --inspect-config",
@@ -129,6 +130,7 @@
     "cytoscape": "^3.29.0",
     "cytoscape-cise": "^1.0.0",
     "ignore": "^5.3.1",
+    "local-pkg": "^0.5.0",
     "pkg-exports": "^0.2.0",
     "solid-js": "^1.8.16",
     "vue-template-compiler": "^2.7.16"
@@ -143,6 +145,7 @@
     "@types/vscode": "^1.88.0",
     "@types/vscode-webview": "^1.57.5",
     "bumpp": "^9.4.0",
+    "esbuild": "^0.20.2",
     "eslint": "^9.0.0",
     "eslint-plugin-format": "^0.1.1",
     "eslint-plugin-solid": "^0.13.2",
