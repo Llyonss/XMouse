@@ -44,11 +44,21 @@ export default class PakcageService {
 
   async getExports(message) {
     const data = await autoSolve(message.data.root, message.data.dependencie)
+    console.log('data', data)
     const result = data.map(item => ({
       id: `${message.data.root}\\${message.data.dependencie}\\${item.name}`,
       title: item.name,
       fileType: 'Export',
-      leaf: false,
+      leaf: !item?.children?.length,
+      meta: item,
+      from: message.data.dependencie,
+      children: item?.children?.map(child => ({
+        id: `${message.data.root}\\${message.data.dependencie}\\${item.name}\\${child.name}`,
+        title: child.name,
+        leaf: true,
+        fileType: 'Export',
+        from: message.data.dependencie,
+      })),
     }))
     return [0, result]
   }

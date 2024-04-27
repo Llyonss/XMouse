@@ -8,15 +8,22 @@ function camelCase(str) {
         return group1.toUpperCase();
     });
 }
+function findName(item) {
+    const name = item.title?.split('.')[0]
+    if (['default', 'index'].includes(name)) {
+        return findName(item.parent)
+    }
+    return name
+}
 const handleDrag = (event: any, type: any, item: any) => {
-    const name = camelCase((item.title === 'default' ? item.parent.title : item.title).split('.')[0]);
-    const code = `console.log('${name}',${name})`;
+    const name = camelCase(findName(item));
+    const code = item.meta.returnType === 'JSXElement' ? `<${name}></${name}>` : name
     event.dataTransfer.setData('text/plain', code);
     vscode.postMessage({
         command: `lego.list.drag.${type}`, data: JSON.parse(JSON.stringify({
             name,
             code,
-            source: { from: item.parent.title, import: `{ ${name} }` },
+            source: { from: item.from, import: item.title === 'default' ? name : `{ ${name} }` },
         }))
     });
 }
@@ -52,7 +59,7 @@ export default () => {
                     <Show when={item.fileType === 'File'}><i class="fa fa-file-code-o" style="margin-right:4px;"></i></Show>
                     <Show when={item.fileType === 'Directory'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
                     <Show when={item.fileType === 'Package'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
-                    <span>{item.title}</span>
+                    <span>{item.title}{item.fileType === 'Export' && (`(${item?.meta?.returnType})` || '')}</span>
                 </div>
             )}
         ></DTreeView>

@@ -131,7 +131,7 @@ export function updateImport(doc: vscode.TextDocument, dependsForAdd: any[]) {
     if (['js', 'ts', 'jsx', 'tsx'].includes(fileType))
       docCode = doc.getText()
 
-    const dependsCode = dependsForAdd.map(depend => `import ${depend.import} from '${nodepath.isAbsolute(depend.from) ? nodepath.relative(doc.uri.fsPath, depend.from).replaceAll('\\', '/').replace('../', '').replace('.ts', '') : depend.from}'`).join('\n')
+    const dependsCode = dependsForAdd.map(depend => `import ${depend.import} from '${nodepath.isAbsolute(depend.from) ? nodepath.relative(doc.uri.fsPath, depend.from).replaceAll('\\', '/').replace('../', '') : depend.from}'`).join('\n')
     const dependsAst = parser.parse(dependsCode, {
       sourceType: 'module',
       plugins: ['jsx', 'typescript', 'decorators'],

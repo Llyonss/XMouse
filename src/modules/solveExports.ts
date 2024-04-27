@@ -43,35 +43,72 @@ export async function loadJson(jsonPath) {
   return packageJson
 }
 
-export async function solveExports(code, uri) {
+export async function solveExports(code) {
   try {
     const ast = parser.parse(code, {
       sourceType: 'module',
       plugins: ['jsx', 'typescript', 'decorators'],
       errorRecovery: true,
     })
-
     const exports: any = []
     traverse(ast, {
       ExportDefaultDeclaration(astPath: any) {
+        const returnType = solveDetail(astPath)
         exports.push({
           name: 'default',
           type: astPath.node.declaration.type,
+          returnType: returnType?.type,
+          children: returnType?.children,
         })
       },
       ExportNamedDeclaration(astPath: any) {
         const specifiers = astPath.node?.specifiers || []
-        specifiers.forEach((specifier: any) => {
-          if (types.isExportSpecifier(specifier))
-            exports.push({ name: specifier.exported?.name })
+        specifiers?.forEach((specifier: any) => {
+          exports.push({ name: specifier.exported?.name, type: specifier.exported?.type })
         })
-        exports.push({ name: astPath.node?.declaration?.id?.name, type: astPath.node?.declaration?.type })
+        const returnType = solveDetail(astPath)
+        exports.push({
+          name: astPath.node?.declaration?.id?.name,
+          type: astPath.node?.declaration?.type,
+          returnType: returnType?.type,
+          children: returnType?.children,
+        })
       },
     })
     return exports
   }
   catch (e) {
     // console.log('eee', e)
+  }
+  function solveDetail(astPath) {
+    switch (astPath?.node?.declaration?.type) {
+      case 'FunctionDeclaration ':
+      case 'ArrowFunctionExpression': return { type: solveFunctionReturn(astPath), children: null }
+      case 'Identifier': return { type: solveIdentify(astPath), children: null }
+      case 'ObjectExpression': return { type: 'object', children: solveObject(astPath) }
+      case 'ArrayExpression ':
+      case 'CallExpression':
+      default: return {}
+    }
+  }
+  function solveFunctionReturn(astPath) {
+    let result
+    astPath.traverse({
+      JSXElement(returnAstPath) {
+        result = returnAstPath.node.type
+      },
+    })
+    return result
+  }
+  function solveObject(astPath) {
+    return astPath?.node?.declaration?.properties?.map(item => ({
+      name: item.key.name,
+      type: item.type,
+    })) || 'object'
+  }
+  function solveIdentify(astPath) {
+    const binding = astPath.scope.getBinding(astPath.node.declaration.name)
+    return solveFunctionReturn(binding.path)
   }
 }
 export async function solveWebType(dependencie, root) {
@@ -101,7 +138,7 @@ export async function autoSolve(packageUri, dependencieName) {
   const error: any = {}
   try {
     const code = await loadCode(filePath)
-    const exports = await solveExports(code, filePath)
+    const exports = await solveExports(code)
     if (exports?.length)
       result.exports = exports
   }

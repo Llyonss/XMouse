@@ -10,22 +10,30 @@ function camelCase(str) {
         return group1.toUpperCase();
     });
 }
+function findName(item) {
+    const name = item.title?.split('.')[0]
+    if (['default', 'index'].includes(name)) {
+        return findName(item.parent)
+    }
+    return name
+}
 const handleDrag = (event: any, type: any, item: any) => {
-    const name = camelCase((item.title === 'default' ? item.parent.title : item.title).split('.')[0]);
-    const code = `console.log('${name}',${name})`;
+    const name = camelCase(findName(item));
+
+    const code = item.meta.returnType === 'JSXElement' ? `<${name}></${name}>` : name
     event.dataTransfer.setData('text/plain', code);
     vscode.postMessage({
         command: `lego.list.drag.${type}`, data: JSON.parse(JSON.stringify({
             name,
             code,
-            source: { from: item.path, import: `{ ${name} }` },
+            source: { from: item.from, import: item.title === 'default' ? name : `{ ${name} }` },
         }))
     });
 }
 const LegoList: Component = () => {
     const [getDirectory, setDirectory] = createSignal([])
     vscode.call('lego.list.workspace', {}).then((res: any) => {
-        console.log('workspace',res)
+        console.log('workspace', res)
         setDirectory(res)
     })
 
@@ -35,14 +43,14 @@ const LegoList: Component = () => {
                 data={getDirectory()}
                 load={async (item) => {
                     if (item.fileType === 'File') {
-                        const res = await vscode.call('lego.list.file', JSON.parse(JSON.stringify(item)) );
+                        const res = await vscode.call('lego.list.file', JSON.parse(JSON.stringify(item)));
                         return res
                     }
                     if (item.fileType === 'Directory') {
-                        const res = await vscode.call('lego.list.directory',  JSON.parse(JSON.stringify(item)));
+                        const res = await vscode.call('lego.list.directory', JSON.parse(JSON.stringify(item)));
                         return res
                     }
-                    return []
+                    return item?.children || []
                 }}
                 node={(item: any) => (
                     <div
@@ -58,7 +66,7 @@ const LegoList: Component = () => {
                         <Show when={item.fileType === 'File'}><i class="fa fa-file-code-o" style="margin-right:4px;"></i></Show>
                         <Show when={item.fileType === 'Directory'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
                         <span >
-                            {item.title}
+                            {item.title}{item.fileType === 'Export' && (`(${item?.meta?.returnType})` || '')}
                         </span>
                     </div>
                 )}

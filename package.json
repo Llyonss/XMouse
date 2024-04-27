@@ -108,7 +108,7 @@
     "build:extension": "npm run esbuild-base -- --minify",
     "build": "rimraf out && pnpm run build:client && pnpm run build:extension ",
     "publish": "vsce publish --no-dependencies",
-    "pack": "vsce package --no-dependencies",
+    "pack": "pnpm run build && vsce package --no-dependencies",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:ui": "eslint --inspect-config",
