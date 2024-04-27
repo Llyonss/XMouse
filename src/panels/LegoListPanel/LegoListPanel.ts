@@ -1,11 +1,6 @@
-import * as path from 'node:path'
 import * as vscode from 'vscode'
-
 import { getUri } from '../../utilities/getUri'
-import { getNonce } from '../../utilities/getNonce'
 import { updateImport } from '../../utilities/astTool'
-import solveExports from '../../modules/solveExports'
-import NpmData from '../LegoList.data'
 import CustomService from './Service/CustomService'
 import DirectoryService from './Service/DirectoryService'
 import PackageService from './Service/PackageService'
@@ -23,21 +18,15 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
   constructor(context: vscode.ExtensionContext, xmFiles: any) {
     this.vscodeContext = context
     this.xmFiles = xmFiles
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider(
+      'xmouse.lego.list',
+      this,
+      { webviewOptions: { retainContextWhenHidden: true } },
+    ))
+    this.registeCommand(context)
+  }
 
-    xmFiles.readWorkspaceConf().then((res: any) => {
-      const map: any = {}
-      res.forEach((item: Lego) => {
-        map[String(item.group) + String(item.name)] = item
-      })
-      this.data.forEach((item: Lego) => {
-        map[String(item.group) + String(item.name)] = item
-      })
-      this.data = Object.values(map)
-      this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data: this.data })
-    })
-
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider('xmouse.lego.list', this, { webviewOptions: { retainContextWhenHidden: true } }),
-    )
+  private registeCommand(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.add', () => {
       this.webviewView?.webview.postMessage({ command: 'lego.list.add' })
     }))
@@ -53,6 +42,10 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     context.subscriptions.push(vscode.commands.registerCommand('xmouse.lego.list.save', () => {
       this.xmFiles.saveWorkspaceConf(this.data)
     }))
+    this.xmFiles.readWorkspaceConf().then((res: any) => {
+      const [err, data] = this.customService.importLego({ data: res })
+      this.webviewView?.webview.postMessage({ command: 'lego.list.fresh', data })
+    })
 
     // 注册到监听队列中
     context.subscriptions.push(vscode.commands.registerCommand(
@@ -62,14 +55,14 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
         if (!editor)
           return
         const text = editor.document.getText(editor.selection)
-        this.customService.addLego({
+        const [err, data] = this.customService.addLego({
           data: {
             name: `未命名${(new Date()).getTime()}`,
             group: '快捷添加',
             code: text,
           },
         })
-        this.webviewView?.webview.postMessage({ command: 'lego.list.updateLegos', data: this.data })
+        this.webviewView?.webview.postMessage({ command: 'lego.list.fresh', data })
       },
     ))
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
@@ -127,11 +120,8 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
   ) {
-    webviewView.webview.options = {
-      enableScripts: true,
-    }
+    webviewView.webview.options = { enableScripts: true }
     webviewView.webview.html = this._getWebviewContent(webviewView.webview, this.vscodeContext.extensionUri)
-
     webviewView.webview.onDidReceiveMessage((message) => {
       const responce = (err, data) => {
         webviewView.webview.postMessage({

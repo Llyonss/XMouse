@@ -13,7 +13,7 @@ function camelCase(str) {
 const handleDrag = (event: any, type: any, item: any) => {
     const name = camelCase((item.title === 'default' ? item.parent.title : item.title).split('.')[0]);
     const code = `console.log('${name}',${name})`;
-    event.dataTransfer.setData('text/plain', '');
+    event.dataTransfer.setData('text/plain', code);
     vscode.postMessage({
         command: `lego.list.drag.${type}`, data: JSON.parse(JSON.stringify({
             name,
@@ -36,12 +36,10 @@ const LegoList: Component = () => {
                 load={async (item) => {
                     if (item.fileType === 'File') {
                         const res = await vscode.call('lego.list.file', JSON.parse(JSON.stringify(item)) );
-                        console.log('File',res)
                         return res
                     }
                     if (item.fileType === 'Directory') {
                         const res = await vscode.call('lego.list.directory',  JSON.parse(JSON.stringify(item)));
-                        console.log('Directory',res)
                         return res
                     }
                     return []

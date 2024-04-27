@@ -48,6 +48,9 @@ const LegoList: Component = (props: any) => {
     vscode.call('lego.list.get', {}).then(res => {
         updateLegoGroupStore(res)
     })
+    vscode.listenMessage('lego.list.fresh', res => {
+        updateLegoGroupStore(res)
+    })
     const slots: any = {
         dialog: [],
         operate: [],
