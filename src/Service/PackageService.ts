@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 import * as vscode from 'vscode'
-import { autoSolve, loadJson } from '../../../modules/solveExports'
+import { autoSolve, loadJson } from '../modules/solveExports'
 
 export default class PakcageService {
   async getPackages(message) {

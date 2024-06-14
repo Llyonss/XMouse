@@ -1,9 +1,9 @@
 import * as vscode from 'vscode'
 import { getUri } from '../../utilities/getUri'
 import { updateImport } from '../../utilities/astTool'
-import CustomService from './Service/CustomService'
-import DirectoryService from './Service/DirectoryService'
-import PackageService from './Service/PackageService'
+import CustomService from '../../Service/CustomService'
+import DirectoryService from '../../Service/DirectoryService'
+import PackageService from '../../Service/PackageService'
 
 interface Lego { id: string, name: string, code: string, source: string, group: string }
 export class LegoListPanel implements vscode.WebviewViewProvider {
@@ -19,7 +19,7 @@ export class LegoListPanel implements vscode.WebviewViewProvider {
     this.vscodeContext = context
     this.xmFiles = xmFiles
     context.subscriptions.push(vscode.window.registerWebviewViewProvider(
-      'xmouse.lego.list',
+      'xmouse.view.lego',
       this,
       { webviewOptions: { retainContextWhenHidden: true } },
     ))

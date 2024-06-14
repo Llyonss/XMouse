@@ -1,8 +1,8 @@
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import { loadCode, solveExports } from '../../../modules/solveExports'
-import Ignore from '../../../modules/checkIgnore'
+import { loadCode, solveExports } from '../modules/solveExports'
+import Ignore from '../modules/checkIgnore'
 
 interface FileItem {
   id: string
@@ -65,7 +65,6 @@ export default class DirectoryService {
     })
 
     const results = await Promise.all(resultPromise)
-    console.log(results)
     return [0, results.filter(item => item)]
   }
 

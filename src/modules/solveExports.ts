@@ -34,6 +34,7 @@ export async function loadCode(uri) {
     return buffer.toString()
   }
 }
+
 export async function loadJson(jsonPath) {
   const packageFile = await vscode.workspace.fs.readFile(
     vscode.Uri.file(jsonPath),
@@ -111,6 +112,7 @@ export async function solveExports(code) {
     return solveFunctionReturn(binding.path)
   }
 }
+
 export async function solveWebType(dependencie, root) {
   try {
     const packageJson = await getPackageInfo(dependencie, { paths: root })

@@ -2,7 +2,7 @@
   "publisher": "dustycoder",
   "name": "xmouse",
   "displayName": "XMouse",
-  "version": "0.4.13",
+  "version": "0.5.0",
   "description": "let's code by mouse",
   "license": "MIT",
   "repository": {
@@ -49,15 +49,6 @@
         "title": "批量删除"
       }
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "xmouse",
-          "title": "xmouse",
-          "icon": "resources/x.png"
-        }
-      ]
-    },
     "menus": {
       "editor/context": [
         {
@@ -89,12 +80,28 @@
         }
       ]
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "xmouse",
+          "title": "xmouse",
+          "icon": "resources/x.png"
+        }
+      ]
+    },
     "views": {
       "xmouse": [
         {
           "type": "webview",
-          "id": "xmouse.lego.list",
-          "name": "代码大全"
+          "id": "xmouse.view.lego",
+          "name": "XMouse代码积木",
+          "contextualTitle": "XMouse代码积木"
+        },
+        {
+          "type": "webview",
+          "id": "xmouse.view.filegraph",
+          "name": "XMouse文件依赖",
+          "contextualTitle": "XMouse文件依赖"
         }
       ]
     }

@@ -173,7 +173,8 @@ export class XMFile {
   }
 
   async solveFiles(pacakges: any) {
-    const uris = await vscode.workspace.findFiles('{**/**.[jt]s,**/**.[jt]sx}', '{package.json,**/package.json ,**/node_modules/**, node_modules/**,dist/**,**/dist/**}')
+    const uris = await vscode.workspace.findFiles('{**/**.[jt]s,**/**.[jt]sx,**/**.vue}', '{package.json,**/package.json ,**/node_modules/**, node_modules/**,dist/**,**/dist/**}')
+    console.log(uris)
     const xmfiles = await Promise.all(uris.map(async (uri) => {
       const dir = path.dirname(uri.fsPath)
       const root = pacakges.find((item: any) => dir.includes(item.root))
@@ -188,11 +189,12 @@ export class XMFile {
         exports: [],
         imports: [],
       }
-      if (['.js', '.jsx', '.ts', '.tsx'].includes(path.extname(uri.fsPath)))
+      if (['.js', '.jsx', '.ts', '.tsx', '.vue'].includes(path.extname(uri.fsPath)))
         return await this.solveJSFile(xmfile)
 
       return xmfile
     }))
+    console.log('xmfilexmfilexmfile', xmfiles)
     return xmfiles
   }
 
@@ -209,7 +211,6 @@ export class XMFile {
       }
       if (['js', 'ts', 'jsx', 'tsx'].includes(fileType))
         docCode = buffer.toString()
-
       const ast = parser.parse(docCode, {
         sourceType: 'module',
         plugins: ['jsx', 'typescript', 'decorators'],
@@ -274,13 +275,37 @@ export class XMFile {
           })()
 
           xmfile.exports.push(...(exportNames || []))
+
+          if (xmfile.path === 'c:\\Users\\欧拯救\\Desktop\\vue3-composition-admin\\src\\layout\\components\\index.ts')
+            console.log('nodenodenodenode', xmfile, node)
+          if (astPath.node.source) {
+            const importPath = astPath.node.source.value
+            const resolvePath = (() => {
+              const isAlilas = /^@\//.test(importPath)
+              if (isAlilas) {
+                const basePath = path.normalize(path.join(vscode?.workspace?.workspaceFolders?.[0]?.uri.fsPath || '', 'src'))
+                const normalizedImportPath = importPath.replace(/^@\//, '')
+
+                return path.resolve(basePath, normalizedImportPath)
+              }
+              else {
+                return path.resolve(path.dirname(xmfile.path), importPath)
+              }
+            })()
+            xmfile.imports.push({
+              dir: path.dirname(resolvePath),
+              name: astPath.node.specifiers.map(specifier => specifier.local.name),
+              from: importPath,
+              path: resolvePath,
+            })
+          }
         },
         ImportDeclaration(astPath) {
           const importPath = astPath.node.source.value
           const resolvePath = (() => {
             const isAlilas = /^@\//.test(importPath)
             if (isAlilas) {
-              const basePath = path.normalize('c:\\Users\\欧拯救\\Desktop\\blog-client\\src')
+              const basePath = path.normalize(path.join(vscode?.workspace?.workspaceFolders?.[0]?.uri.fsPath || '', 'src'))
               const normalizedImportPath = importPath.replace(/^@\//, '')
 
               return path.resolve(basePath, normalizedImportPath)
@@ -300,45 +325,74 @@ export class XMFile {
       return xmfile
     }
     catch (e) {
+      console.log('bugggg', xmfile)
     }
   }
 
   solveRelation(xmfiles: any) {
-    const relations: any[] = [{ id: 'npm' }]
+    const node: any[] = []
+    const line: any[] = []
     // todo: 封装成通用模块
+
     xmfiles.forEach((xmfile: any, xmfileIndex: any) => {
-      relations.push({ id: xmfileIndex, file: xmfile.path, label: xmfile.name, group: xmfile.relativePath.replace('c:\\Users\\欧拯救\\Desktop', '@') })
-      xmfile.imports.forEach((importItem: any) => {
-        let find = false
-        xmfiles.forEach((item: any, itemIndex: any) => {
-          if (
-            importItem.path.toLowerCase() === item.path.toLowerCase()
-            || importItem.path.toLowerCase() === item.path.replace(/\.\w*$/, '').toLowerCase()
-            || path.join(importItem.path, 'index').toLowerCase() === item.path.replace(/\.\w*$/, '').toLowerCase()
-          ) {
-            relations.push({
-              file: xmfile.path,
-              target: xmfileIndex,
-              use: item.path,
-              source: itemIndex,
-              id: `${xmfileIndex}-${itemIndex}`,
-            })
-            find = true
+      try {
+        node.push({
+          id: xmfileIndex,
+          file: xmfile.path,
+          label: xmfile.name,
+          group: xmfile.relativePath,
+          effect: [],
+        })
+        xmfile.imports.forEach((importItem: any) => {
+          let find = false
+
+          const importPath = importItem?.path.replace('@', `${vscode?.workspace?.workspaceFolders?.[0]?.uri.path}/src`)
+
+          if (importItem?.path[0] === '@')
+            console.log('importItem?.path', importItem?.path, importPath)
+
+          xmfiles.forEach((item: any, itemIndex: any) => {
+            if (
+              importPath.toLowerCase() === item?.path.toLowerCase()
+              || importPath.toLowerCase() === item?.path.replace(/\.\w*$/, '').toLowerCase()
+              || path.join(importPath, 'index').toLowerCase() === item?.path.replace(/\.\w*$/, '').toLowerCase()
+            ) {
+              line.push({
+                file: xmfile.path,
+                target: xmfileIndex,
+                use: item.path,
+                source: itemIndex,
+                id: `${xmfileIndex}-${itemIndex}`,
+              })
+              node[itemIndex]?.effect.push(xmfileIndex)
+              find = true
+            }
+          })
+          if (!find) {
+            // console.log('xxxxmm', importItem.from, importItem.path,xmfile.path, )
+            // relations.push({
+            //   file: xmfile.path,
+            //   target: xmfileIndex,
+            //   use: importItem.from,
+            //   source: '',
+            //   id: importItem.from,
+            // })
           }
         })
-        if (!find) {
-          // console.log('xxxxmm', importItem.from, importItem.path,xmfile.path, )
-          relations.push({
-            file: xmfile.path,
-            target: xmfileIndex,
-            use: importItem.from,
-            source: 'npm',
-            id: importItem.from,
-          })
-        }
-      })
+      }
+      catch (e) {
+        console.log('bugggg', e, xmfile, xmfileIndex)
+        node.push({
+          id: xmfileIndex,
+          file: xmfile?.path,
+          label: xmfile?.name,
+          group: xmfile?.relativePath,
+          effect: [],
+        })
+      }
     })
-    return relations
+    console.log({ node, line })
+    return { node, line }
   }
 
   solveNodeModule() {

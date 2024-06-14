@@ -59,7 +59,7 @@ export default () => {
                     <Show when={item.fileType === 'File'}><i class="fa fa-file-code-o" style="margin-right:4px;"></i></Show>
                     <Show when={item.fileType === 'Directory'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
                     <Show when={item.fileType === 'Package'}><i class="fa fa-folder-o" style="margin-right:4px;"></i></Show>
-                    <span>{item.title}{item.fileType === 'Export' && (`(${item?.meta?.returnType})` || '')}</span>
+                    <span>{item.title}{item.fileType === 'Export' && (`(${item?.meta?.returnType|| 'var'})` )}</span>
                 </div>
             )}
         ></DTreeView>
