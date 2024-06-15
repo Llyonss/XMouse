@@ -359,6 +359,8 @@ export class XMFile {
             ) {
               line.push({
                 file: xmfile.path,
+                from: item.path,
+                to: xmfile.path,
                 target: xmfileIndex,
                 use: item.path,
                 source: itemIndex,

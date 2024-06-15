@@ -5,17 +5,23 @@ import FileRelation from './FileRelation';
 export default () => {
   const [getGraph, setGraph] = createSignal([])
   const [getCurrent, setCurrent] = createSignal('')
-  vscode.call('lego.relations', {}).then((res: any) => {
-    console.log('resresres',res)
-    setGraph(res)
+  // vscode.call('lego.relations', {}).then((res: any) => {
+  //   console.log('resresres', res)
+  //   setGraph(res)
+  // })
+  vscode.call('lego.fileTree', {}).then((res: any) => {
+    console.log('resresres', res)
+    setGraph({
+      nodes: res.nodes,
+      links: res.links,
+      relations: res.relations,
+    })
   })
   vscode.listenMessage('lego.current', (data: any) => {
     if (!data) { return }
-    const index = getGraph()?.node?.findIndex((item: any) => {
-      return item?.file?.replace("\\\\", "\\") === data
-    })
-    console.log('index', index)
-    setCurrent(index + '')
+ 
+    console.log('datadatadatadatadata', data)
+    setCurrent(data)
   })
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">

@@ -103,6 +103,16 @@ export default class FileGraphPanel extends BaseProvider {
         const relations = this.xmFiles.solveRelation(files)
         return [0, relations]
       },
+
+      'lego.fileTree': async (message) => {
+        const workspace = vscode.workspace.workspaceFolders?.[0].uri.fsPath
+        const result = await this.directoryService.getFileGraph({ directory: workspace, workspace })
+        const packages = await this.xmFiles.solvePackageJson()
+        const files = await this.xmFiles.solveFiles(packages)
+        result.relations = this.xmFiles.solveRelation(files).line
+        console.log('ssss', result)
+        return [0, result]
+      },
       // CustomApi
     }
 
@@ -114,11 +124,10 @@ export default class FileGraphPanel extends BaseProvider {
       // 执行你的逻辑
       console.log('当前窗口已激活', editor?.document.fileName)
       // 获取当前文件名
-      const fileName = editor?.document.fileName
+      const fileName = editor?.document.uri.fsPath
       this.webviewView?.webview.postMessage({
         command: 'lego.current',
         data: fileName,
-
       })
     })
   }

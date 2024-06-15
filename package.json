@@ -2,7 +2,7 @@
   "publisher": "dustycoder",
   "name": "xmouse",
   "displayName": "XMouse",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "let's code by mouse",
   "license": "MIT",
   "repository": {
@@ -139,6 +139,7 @@
     "cytoscape-d3-force": "^1.1.4",
     "cytoscape-dagre": "^2.5.0",
     "cytoscape-fcose": "^2.2.0",
+    "d3": "^7.9.0",
     "ignore": "^5.3.1",
     "local-pkg": "^0.5.0",
     "pkg-exports": "^0.2.0",

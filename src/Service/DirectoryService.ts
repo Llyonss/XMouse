@@ -68,6 +68,56 @@ export default class DirectoryService {
     return [0, results.filter(item => item)]
   }
 
+  async getFileTree({ directory, workspace }) {
+    const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(directory))
+    return await Promise.all(entries.map(async ([name, type]) => {
+      const entriePath = path.join(directory, name)
+      if (this.ignore.check(entriePath, workspace)) {
+        return {
+          id: entriePath,
+          label: name,
+          path: entriePath,
+          ignore: true,
+          type,
+        }
+      }
+
+      if (type === vscode.FileType.File) {
+        return {
+          id: entriePath,
+          label: name,
+          path: entriePath,
+          type,
+        }
+      }
+      if (type === vscode.FileType.Directory) {
+        return {
+          id: entriePath,
+          label: name,
+          path: entriePath,
+          children: await this.getFileTree({ directory: entriePath, workspace }),
+          type,
+        }
+      }
+    }))
+  }
+
+  async getFileGraph({ directory, workspace }) {
+    const fileTree = await this.getFileTree({ directory, workspace })
+    const links = []
+    const nodes = [{ id: workspace, label: 'workspace', path: workspace, type: 3 }]
+    const traverse = (list, parent) => {
+      list.forEach((item) => {
+        traverse(item?.children || [], item)
+        nodes.push({ id: item.id, path: item.path, type: item.type, ignore: item.ignore, label: item.label, dir: parent.id })
+        if (parent)
+          links.push({ from: item.id, to: parent.id })
+      })
+    }
+    traverse(fileTree, { id: workspace, label: 'workspace', path: workspace, type: 3 })
+    return { links, nodes }
+  }
+
   async getFile(message) {
     const filePath = message.data.path
     const extname = path.extname(filePath).replace('.', '')
