@@ -6,6 +6,7 @@ export default () => {
   const [getGraph, setGraph] = createSignal([])
   const [getCurrent, setCurrent] = createSignal('')
   vscode.call('lego.relations', {}).then((res: any) => {
+    console.log('resresres',res)
     setGraph(res)
   })
   vscode.listenMessage('lego.current', (data: any) => {
