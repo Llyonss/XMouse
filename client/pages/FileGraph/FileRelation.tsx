@@ -82,11 +82,11 @@ function draw({ nodes, links, relations }, props) {
             },
             {
                 selector: "node[type = 2]",
-                style: { "background-color": "white", 'width': '10px', 'height': '10px', 'font-size': '30px', 'font-weight': 'bold', 'color': 'rgba(255,255,255,0.5)' }
+                style: { "background-color": "white", 'width': '10px', 'height': '10px', 'font-size': '70px', 'font-weight': 'bold', 'color': 'rgba(255,255,255,0.5)' }
             },
             {
                 selector: "node[type = 3]",
-                style: { "background-color": "white", 'width': '40px', 'height': '40px', 'font-size': '30px', 'font-weight': 'bold', 'color': 'rgba(255,255,255,0.5)' }
+                style: { "background-color": "white", 'width': '80px', 'height': '80px', 'font-size': '100px', 'font-weight': 'bold', 'color': 'rgba(255,255,255,0.5)' }
             }
         ],
         layout: {
@@ -97,7 +97,7 @@ function draw({ nodes, links, relations }, props) {
                 return d.id;
             },
             linkDistance: 100,
-            manyBodyStrength: -500,
+            manyBodyStrength: -2000,
             ready: function () { },
             stop: function () { },
             tick: function (progress) {
@@ -134,7 +134,7 @@ function draw({ nodes, links, relations }, props) {
 
 const update = (current: any) => {
     const buffer: any[] = []
-    const travelEffect = (node: any, level = 1) => {
+    const travelEffect = (node: any, level = 0) => {
         node.outgoers().forEach(next => {
             if (buffer.includes(next.data('id'))) {
                 return;
@@ -145,16 +145,19 @@ const update = (current: any) => {
             buffer.push(next.data('id'))
 
             next.addClass('effect')
-            node.edgesTo(next).style({ 'line-color': 'red', 'mid-target-arrow-color': 'red', 'width': 5, 'z-index': '1' })
-            if (level === 0) {
-                node.edgesTo(next).style({ 'line-color': 'yellow', 'mid-target-arrow-color': 'yellow', 'width': 5, 'z-index': '1' })
-            }
+            const colors = ['red', 'yellow', 'blue', 'green', '#00FFFF', '#8080C0']
+            node.style({ 'background-color': colors[level] })
+            node.edgesTo(next).style({ 'line-color': colors[level], 'mid-target-arrow-color': colors[level], 'width': 5, 'z-index': '1' })
+
             console.log('nextnext', next, node.edgesTo(next))
-            travelEffect(next, 0)
+            travelEffect(next, level + 1)
         })
     }
+    cy.nodes('.current').style({ 'background-color': '#678F8D' })
+    cy.nodes('.effect').style({ 'background-color': '#678F8D' })
     cy.nodes().removeClass('current');
     cy.nodes().removeClass('effect');
+    cy.nodes().style({ 'background-color': '#678F8D' })
     cy.edges("[type = 2]").style({ 'line-color': '#678F8D', 'mid-target-arrow-color': '#678F8D', 'width': 1, 'z-index': 'unset' })
     // console.log("cy.edges('[type = 2]')", cy.edges(),cy.edges('[type = 2]'))
     cy.elements().forEach(function (element) {

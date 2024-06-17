@@ -1,6 +1,6 @@
 # This file contains all the files/directories that should
 # be ignored (i.e. not included) in the final packaged extension.
-
+.git
 # Ignore extension configs
 .vscode/**
 # Ignore test files
