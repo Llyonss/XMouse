@@ -17,7 +17,7 @@ cytoscape.use(force);
 provideVSCodeDesignSystem().register(vsCodeButton(), vsCodeTextArea());
 
 let cy: any = null;
-function draw({ nodes, links, relations }) {
+function draw({ nodes, links, relations }, props) {
 
     const elements = [
         ...(nodes?.map(data => ({
@@ -46,7 +46,8 @@ function draw({ nodes, links, relations }) {
                 style: {
                     'background-color': '#678F8D',
                     'label': 'data(label)',
-                    'color': 'white'
+                    'color': 'white',
+                    'z-index': 100,
                 }
             },
             {
@@ -56,7 +57,7 @@ function draw({ nodes, links, relations }) {
                     'line-color': '#ccc',
                 }
             },
-       
+
             {
                 selector: '.current',
                 style: {
@@ -81,11 +82,11 @@ function draw({ nodes, links, relations }) {
             },
             {
                 selector: "node[type = 2]",
-                style: { "background-color": "white", 'width': '10px', 'height': '10px' }
+                style: { "background-color": "white", 'width': '10px', 'height': '10px', 'font-size': '30px', 'font-weight': 'bold', 'color': 'rgba(255,255,255,0.5)' }
             },
             {
                 selector: "node[type = 3]",
-                style: { "background-color": "white", 'width': '40px', 'height': '40px' }
+                style: { "background-color": "white", 'width': '40px', 'height': '40px', 'font-size': '30px', 'font-weight': 'bold', 'color': 'rgba(255,255,255,0.5)' }
             }
         ],
         layout: {
@@ -95,7 +96,7 @@ function draw({ nodes, links, relations }) {
             linkId: function id(d) {
                 return d.id;
             },
-            linkDistance: 20,
+            linkDistance: 100,
             manyBodyStrength: -500,
             ready: function () { },
             stop: function () { },
@@ -122,7 +123,10 @@ function draw({ nodes, links, relations }) {
 
 
     })
-
+    cy.on('click', 'node', function (evt) {
+        console.log('clicked ' + this.id(), evt);
+        props?.onNodeClick?.(this)
+    });
 
 }
 
@@ -130,7 +134,7 @@ function draw({ nodes, links, relations }) {
 
 const update = (current: any) => {
     const buffer: any[] = []
-    const travelEffect = (node: any) => {
+    const travelEffect = (node: any, level = 1) => {
         node.outgoers().forEach(next => {
             if (buffer.includes(next.data('id'))) {
                 return;
@@ -141,14 +145,17 @@ const update = (current: any) => {
             buffer.push(next.data('id'))
 
             next.addClass('effect')
-            node.edgesTo(next).style({ 'line-color': 'yellow' })
+            node.edgesTo(next).style({ 'line-color': 'red', 'mid-target-arrow-color': 'red', 'width': 5, 'z-index': '1' })
+            if (level === 0) {
+                node.edgesTo(next).style({ 'line-color': 'yellow', 'mid-target-arrow-color': 'yellow', 'width': 5, 'z-index': '1' })
+            }
             console.log('nextnext', next, node.edgesTo(next))
-            travelEffect(next)
+            travelEffect(next, 0)
         })
     }
     cy.nodes().removeClass('current');
     cy.nodes().removeClass('effect');
-    cy.edges("[type = 2]").style({ 'line-color': '#678F8D' })
+    cy.edges("[type = 2]").style({ 'line-color': '#678F8D', 'mid-target-arrow-color': '#678F8D', 'width': 1, 'z-index': 'unset' })
     // console.log("cy.edges('[type = 2]')", cy.edges(),cy.edges('[type = 2]'))
     cy.elements().forEach(function (element) {
         if (element.data('id') === current) {
@@ -163,11 +170,12 @@ const update = (current: any) => {
 const FileRelation = (props: { graph: any, current: any }) => {
     onMount(() => {
         createEffect(() => {
-            draw(props.graph)
+            draw(props.graph, props)
         })
         createEffect(() => {
             update(props.current)
         })
+
     })
 
     return (

@@ -19,13 +19,18 @@ export default () => {
   })
   vscode.listenMessage('lego.current', (data: any) => {
     if (!data) { return }
- 
+
     console.log('datadatadatadatadata', data)
     setCurrent(data)
   })
+
+  function handleNodeClick(node) {
+    console.log('click', node)
+    vscode.call('lego.changeEditor', { id: node.id() })
+  }
   return (
     <div style="color:var(--vscode-sideBarSectionHeader-foreground)">
-      <FileRelation graph={getGraph()} current={getCurrent()} ></FileRelation>
+      <FileRelation graph={getGraph()} current={getCurrent()} onNodeClick={handleNodeClick}></FileRelation>
     </div>
   );
 };

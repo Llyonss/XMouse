@@ -113,6 +113,17 @@ export default class FileGraphPanel extends BaseProvider {
         console.log('ssss', result)
         return [0, result]
       },
+
+      'lego.changeEditor': async (message) => {
+        console.log('click', message.data.id)
+
+        const openPath = vscode.Uri.file(message.data.id)
+        vscode.workspace.openTextDocument(openPath).then((doc) => {
+          vscode.window.showTextDocument(doc)
+        })
+
+        return [0, 'ok']
+      },
       // CustomApi
     }
 
