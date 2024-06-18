@@ -19,7 +19,7 @@ export default class MyIgnore {
         if (fs.existsSync(gitignorePath)) {
           const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8')
           const ignoreRules = gitignoreContent.split('\n').filter(rule => !!rule.trim() && !rule.startsWith('#'))
-          this.gitignoreContents.set(workspaceFolder.uri.fsPath, ignoreRules)
+          this.gitignoreContents.set(workspaceFolder.uri.fsPath, [...ignoreRules, '.git'])
         }
         else {
           this.gitignoreContents.set(workspaceFolder.uri.fsPath, [])
