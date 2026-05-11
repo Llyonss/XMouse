@@ -28,11 +28,21 @@ export function withAdd(slots, legoGroupsStore, setLegoGroups) {
         })
     }
     slots.dialog.push((<DialogForAddLego></DialogForAddLego>));
-    slots.operate.push((<button onClick={() => { addLego() }}>添加组件</button>));
-    slots.emptyButton.push((<button onClick={() => { addLego() }}>添加组件</button>));
+    slots.operate.push((
+        <button class="lego-list__operate-btn" onClick={() => { addLego() }}>
+            <i class="fa fa-plus"></i>
+            <span class="btn-text">添加组件</span>
+        </button>
+    ));
+    slots.emptyButton.push((
+        <button class="lego-list__empty-btn" onClick={() => { addLego() }}>
+            <i class="fa fa-plus"></i>
+            添加第一个组件
+        </button>
+    ));
     slots.itemMenu.push((item) => ({ id: 'edit', label: '编辑', onClick: () => { updateLego(item) } }));
     vscode.listenMessage('lego.list.add', () => { addLego() })
-    window.addEventListener('xmouse:lego-add', () => { addLego() })
+
 }
 // 删除
 export function withDelete(slots, legoGroupsStore, setLegoGroups) {
@@ -55,7 +65,12 @@ export function withDelete(slots, legoGroupsStore, setLegoGroups) {
 export function withExport(slots, legoGroupsStore, setLegoGroups) {
     const [DialogForExport, openDialogForExport] = useDialogForExport();
     slots.dialog.push((<DialogForExport></DialogForExport>));
-    slots.operate.push((<button onClick={[openDialogForExport, legoGroupsStore]}>批量导出</button>));
+    slots.operate.push((
+        <button class="lego-list__operate-btn" onClick={[openDialogForExport, legoGroupsStore]}>
+            <i class="fa fa-download"></i>
+            <span class="btn-text">批量导出</span>
+        </button>
+    ));
     vscode.listenMessage('lego.list.export', (data: any) => {
         openDialogForExport(legoGroupsStore).then((list: any[]) => {
             navigator.clipboard.writeText(JSON.stringify(list)).then(() => {
@@ -74,7 +89,12 @@ export function withExport(slots, legoGroupsStore, setLegoGroups) {
 export function withImport(slots, legoGroupsStore, setLegoGroups) {
     const [DialogForImport, openDialogForImport] = useDialogForImport();
     slots.dialog.push((<DialogForImport></DialogForImport>));
-    slots.operate.push((<button onClick={openDialogForImport}>导入配置</button>));
+    slots.operate.push((
+        <button class="lego-list__operate-btn" onClick={openDialogForImport}>
+            <i class="fa fa-upload"></i>
+            <span class="btn-text">导入配置</span>
+        </button>
+    ));
     vscode.listenMessage('command.lego.list.import', (data: any) => {
         openDialogForImport({}).then((list: any[]) => {
             vscode.call('lego.list.import',list);
@@ -97,7 +117,12 @@ export function withMultiDelete(slots, legoGroupsStore, setLegoGroups) {
         })
     }
     slots.dialog.push((<DialogForMultiDelete></DialogForMultiDelete>));
-    slots.operate.push((<button onClick={handleMultiDelete}>批量删除</button>));
+    slots.operate.push((
+        <button class="lego-list__operate-btn" onClick={handleMultiDelete}>
+            <i class="fa fa-trash"></i>
+            <span class="btn-text">批量删除</span>
+        </button>
+    ));
     vscode.listenMessage('lego.list.multi-delete', () => {
         handleMultiDelete()
     })

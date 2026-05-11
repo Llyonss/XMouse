@@ -22,7 +22,7 @@ export default () => {
                     placeholder="如: [&#13;&#10;  {&#13;&#10;    name:'按钮',&#13;&#10;    group:'我的UI',&#13;&#10;    code:'<Button></Button>',&#13;&#10;    source:[&#13;&#10;      {&#13;&#10;        import:'{button}',&#13;&#10;        from:'element-ui'&#13;&#10;      }&#13;&#10;    ]&#13;&#10;  }&#13;&#10;]"
                     value={getJson()}
                     onChange={event => setJson(event.target.value)}
-                    style="height: calc(var(--input-height) * 9px);width:100%;">
+                    style="min-height:100px;max-height:180px;width:100%;">
                 </textarea>
 
             </>)}
