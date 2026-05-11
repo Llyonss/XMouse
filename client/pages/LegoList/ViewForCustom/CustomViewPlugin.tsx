@@ -32,6 +32,7 @@ export function withAdd(slots, legoGroupsStore, setLegoGroups) {
     slots.emptyButton.push((<button onClick={() => { addLego() }}>添加组件</button>));
     slots.itemMenu.push((item) => ({ id: 'edit', label: '编辑', onClick: () => { updateLego(item) } }));
     vscode.listenMessage('lego.list.add', () => { addLego() })
+    window.addEventListener('xmouse:lego-add', () => { addLego() })
 }
 // 删除
 export function withDelete(slots, legoGroupsStore, setLegoGroups) {

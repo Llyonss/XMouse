@@ -60,7 +60,9 @@ const LegoList: Component = (props: any) => {
 
     CustomViewPlugin.map(install => { install(slots, legoGroupsStore, updateLegoGroupStore) })
     return (<>
-        {/* <section>{slots.operate}</section> */}
+        <section style="display:flex; gap:8px; padding:8px 16px; flex-wrap: wrap;">
+            {slots.operate}
+        </section>
         <Switch fallback={<div></div>}>
             <Match when={legoGroupsStore.length === 0}>
                 <div style="padding:12px 24px">
