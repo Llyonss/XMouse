@@ -43,7 +43,7 @@
 
     &[data-part='trigger']:hover::after,
     &[data-part='trigger']:focus::after {
-        border-color: hsl(20, 96%, 48%);
+        border-color: var(--vscode-focusBorder);
     }
 
     &[data-part='trigger']:hover::after,
@@ -54,7 +54,7 @@
         right: -1px;
         left: -1px;
         border-radius: 0.2em 0.2em 0 0;
-        border-top: 3px solid hsl(20, 96%, 48%);
+        border-top: 3px solid var(--vscode-focusBorder);
         content: '';
     }
 

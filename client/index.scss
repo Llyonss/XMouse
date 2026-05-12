@@ -14,12 +14,20 @@ textarea {
   background: var(--input-background);
   border-radius: calc(var(--corner-radius-round) * 1px);
   border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
-  height: calc(var(--input-height) * 1px);
+  min-height: calc(var(--input-height) * 1px);
   min-width: var(--input-min-width);
+  padding: 4px 8px;
+  height: auto;
+
+  &::placeholder {
+    color: var(--vscode-input-placeholderForeground);
+    opacity: 0.45;
+  }
 }
 
 textarea {
-  height: calc(var(--input-height) * 3px);
+  min-height: calc(var(--input-height) * 3px);
+  padding: 6px 8px;
 }
 
 button {

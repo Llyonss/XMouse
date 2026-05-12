@@ -1,0 +1,235 @@
+// ====== 变量 ======
+$card-min-width: 56px;
+$gap-sm: 6px;
+$gap-md: 12px;
+$radius: 6px;
+$transition-fast: 0.12s ease;
+$transition-normal: 0.15s ease;
+
+// ====== 根容器 ======
+.lego-list {
+  height: 100vh;
+  display: flex;
+  flex-flow: column;
+  color: var(--vscode-sideBarSectionHeader-foreground);
+
+  // ====== Tab 栏 ======
+  &__tab-bar {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 0 8px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--vscode-sideBar-border);
+    min-height: 32px;
+  }
+
+  &__tab-list {
+    flex: 1 1;
+    min-width: 0; // 允许收缩
+  }
+
+
+
+  // ====== 内容滚动区 ======
+  &__content {
+    flex: 1 1;
+    overflow: auto;
+  }
+
+  // ====== 操作按钮栏 ======
+  &__operate {
+    display: flex;
+    flex-flow: row wrap;
+    gap: $gap-sm;
+    padding: 8px 12px;
+    flex-shrink: 0;
+  }
+
+  &__operate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: $radius;
+    border: 1px solid var(--vscode-button-secondaryBorder, transparent);
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all $transition-fast;
+    line-height: 1.4;
+
+    &:hover {
+      background: var(--vscode-button-secondaryHoverBackground);
+      border-color: var(--vscode-focusBorder);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    i.fa {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    // 极窄屏只显示图标
+    @media (max-width: 300px) {
+      .btn-text {
+        display: none;
+      }
+      padding: 4px 6px;
+      gap: 0;
+    }
+  }
+
+  // ====== 空状态 ======
+  &__empty {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--vscode-descriptionForeground);
+
+    &-icon {
+      font-size: 48px;
+      opacity: 0.25;
+      margin-bottom: 12px;
+    }
+
+    &-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--vscode-foreground);
+      margin-bottom: 10px;
+    }
+
+    &-steps {
+      text-align: left;
+      font-size: 12px;
+      line-height: 1.9;
+      margin-bottom: 20px;
+      color: var(--vscode-descriptionForeground);
+      opacity: 0.85;
+    }
+
+    &-btn {
+      padding: 5px 18px;
+      border-radius: $radius;
+      border: 1px solid var(--vscode-button-border);
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      transition: all $transition-fast;
+
+      &:hover {
+        background: var(--vscode-button-hoverBackground);
+      }
+
+      i.fa {
+        font-size: 13px;
+      }
+    }
+  }
+
+  // ====== 组件卡片网格 ======
+  &__items {
+    display: flex;
+    flex-flow: row wrap;
+    gap: $gap-md;
+    padding: 12px;
+    background: var(--vscode-editor-background);
+    align-items: flex-start;
+
+    @media (max-width: 280px) {
+      gap: $gap-sm;
+      padding: 8px;
+    }
+  }
+
+  &__item {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    width: $card-min-width;
+    cursor: grab;
+    transition: all $transition-normal;
+    border-radius: $radius;
+    padding: 4px;
+    user-select: none;
+
+    &:hover {
+      background: var(--vscode-list-hoverBackground);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    &:active {
+      cursor: grabbing;
+      opacity: 0.55;
+      transform: scale(0.94);
+      transition: all 0.05s ease;
+    }
+
+    &-icon {
+      width: 48px;
+      height: 48px;
+      padding: 4px;
+      border: 1px solid var(--vscode-panel-border);
+      background: var(--vscode-badge-background);
+      border-radius: 8px;
+
+      img {
+        width: 100%;
+        height: 100%;
+        border-radius: 6px;
+        pointer-events: none;
+        background: white;
+      }
+    }
+
+    &-label {
+      width: 100%;
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.3;
+      word-break: break-all;
+      margin-top: 4px;
+      color: var(--vscode-foreground);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  // ====== 折叠面板微调 ======
+  &__accordion {
+    [data-part='item-trigger'] {
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 500;
+
+      &:hover {
+        background: var(--vscode-list-hoverBackground);
+      }
+    }
+
+    [data-part='item-content'] {
+      padding: 0;
+    }
+
+    [data-part='item']:not(:last-child) {
+      border-bottom: 1px solid var(--vscode-sideBar-border);
+    }
+  }
+}

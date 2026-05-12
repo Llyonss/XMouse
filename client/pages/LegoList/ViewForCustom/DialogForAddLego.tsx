@@ -16,35 +16,32 @@ export default () => {
                     <>{getIsAdd() ? '添加组件' : '编辑组件'}</>
                 )}
                 content={() => (
-                    <DLayout.Column style="gap:8px;min-width:250px;">
-                        <DLayout.Row >
-                            <span style="width:5rem;">组件名：</span>
-                            <input style="flex-grow: 1;" placeholder="如: ElButton按钮" value={getName()} onChange={event => setName(event.target.value)}></input>
-                        </DLayout.Row>
-                        <DLayout.Row >
-                            <span style="width:5rem;">组件分类：</span>
-                            <input style="flex-grow: 1;" placeholder="如: 我的UI" value={getGroup()} onChange={event => setGroup(event.target.value)}></input>
-                        </DLayout.Row>
-                        {/* <span>组件ICON：</span><input></input> */}
-                        <div>
-                            <span >组件依赖：</span>
-                            <DLayout.Column style="gap:8px;padding-left:1rem;margin-top:8px;">
-                                <label >
-                                    <DLayout.Row >
-                                        <span style="width:4rem;">import</span>
-                                        <input placeholder="如: { ElButton }" style="flex-grow: 1;" value={getSource().import} onChange={event => setSource({ ...getSource(), import: event.target.value })}></input>
-                                    </DLayout.Row>
-                                </label>
-                                <label>
-                                    <DLayout.Row >
-                                        <span style="width:4rem;">from</span>
-                                        <input placeholder="如: element-ui" style="flex-grow: 1;" value={getSource().from} onChange={event => setSource({ ...getSource(), from: event.target.value })}></input>
-                                    </DLayout.Row>
-                                </label>
+                    <DLayout.Column style="gap:12px;min-width:0;">
+                        <DLayout.Column style="gap:3px;">
+                            <span style="font-size:12px;color:var(--vscode-descriptionForeground);">组件名</span>
+                            <input style="width:100%;box-sizing:border-box;" placeholder="如: ElButton按钮" value={getName()} onChange={event => setName(event.target.value)}></input>
+                        </DLayout.Column>
+                        <DLayout.Column style="gap:3px;">
+                            <span style="font-size:12px;color:var(--vscode-descriptionForeground);">组件分类</span>
+                            <input style="width:100%;box-sizing:border-box;" placeholder="如: 我的UI" value={getGroup()} onChange={event => setGroup(event.target.value)}></input>
+                        </DLayout.Column>
+                        <DLayout.Column style="gap:3px;">
+                            <span style="font-size:12px;color:var(--vscode-descriptionForeground);">组件依赖</span>
+                            <DLayout.Column style="gap:8px;padding-left:10px;">
+                                <DLayout.Column style="gap:2px;">
+                                    <span style="font-size:11px;color:var(--vscode-descriptionForeground);">import</span>
+                                    <input style="width:100%;box-sizing:border-box;" placeholder="如: { ElButton }" value={getSource().import} onChange={event => setSource({ ...getSource(), import: event.target.value })}></input>
+                                </DLayout.Column>
+                                <DLayout.Column style="gap:2px;">
+                                    <span style="font-size:11px;color:var(--vscode-descriptionForeground);">from</span>
+                                    <input style="width:100%;box-sizing:border-box;" placeholder="如: element-ui" value={getSource().from} onChange={event => setSource({ ...getSource(), from: event.target.value })}></input>
+                                </DLayout.Column>
                             </DLayout.Column>
-                        </div>
-
-                        <span style="width:5rem;">组件内容</span><textarea placeholder="如: <ElButton>你好</ElButton>" value={getCode()} onChange={event => setCode(event.target.value)}></textarea>
+                        </DLayout.Column>
+                        <DLayout.Column style="gap:3px;">
+                            <span style="font-size:12px;color:var(--vscode-descriptionForeground);">组件内容</span>
+                            <textarea style="width:100%;box-sizing:border-box;min-height:60px;max-height:140px;" placeholder="如: <ElButton>你好</ElButton>" value={getCode()} onChange={event => setCode(event.target.value)}></textarea>
+                        </DLayout.Column>
                     </DLayout.Column>
                 )}
                 footer={(close) => (
